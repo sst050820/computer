@@ -9,49 +9,25 @@
   <link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
-<div class="app-shell">
-  <aside class="sidebar" id="sidebar" style="display:none">
-    <div class="role-badge-side" id="roleBadgeSide"></div>
-    <nav class="menu" id="sideMenu"></nav>
-    <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> 退出登录</button>
-  </aside>
 
-  <!-- Taobao Top Navigation Bar -->
-  <div class="tb-topbar" id="topBar" style="display:none;">
-    <div class="tb-logo"><i class="fas fa-leaf"></i> <span>农淘</span></div>
-    <div class="tb-search">
-      <input id="tbSearchInput" placeholder="搜索农产品、产地、店铺..." />
-      <button id="tbSearchBtn"><i class="fas fa-search"></i></button>
-    </div>
-    <div class="tb-actions">
-      <button class="tb-action-btn" id="tbCartBtn"><i class="fas fa-shopping-cart"></i> <span>购物车</span><span class="tb-cart-badge" id="tbCartBadge" style="display:none;">0</span></button>
-      <button class="tb-action-btn" id="tbMsgBtn"><i class="fas fa-envelope"></i> <span>消息</span></button>
-      <button class="tb-action-btn" id="tbUserBtn"><i class="fas fa-user-circle"></i> <span id="tbUserName">我的</span></button>
-    </div>
-  </div>
-
-  <main class="content" id="mainContent">
-
-    <!-- Login Page (Taobao Style) -->
-    <div id="loginPage">
-      <div class="login-container">
-        <div class="login-card">
-          <div class="tb-logo-text">
-            <i class="fas fa-leaf" style="font-size:2.5rem;color:var(--tb-orange);"></i>
-            <h1>农淘</h1>
-            <p>特色农产品 · 源头直供 · 安心溯源</p>
-          </div>
-          <div id="loginForm" style="display:grid;gap:12px;">
-            <label style="font-size:0.85rem;font-weight:500;">用户名</label>
-            <input id="loginUsername" placeholder="输入用户名" autocomplete="username" />
-            <label style="font-size:0.85rem;font-weight:500;">密码</label>
-            <input id="loginPassword" type="password" placeholder="输入密码" autocomplete="current-password" />
-            <div id="loginError" style="color:#ef4444;font-size:0.85rem;display:none;"></div>
-            <button class="btn" id="loginSubmitBtn" style="width:100%;padding:12px;justify-content:center;font-size:0.95rem;"><i class="fas fa-sign-in-alt"></i> 登录</button>
-          </div>
-          <p style="text-align:center;margin-top:16px;font-size:0.85rem;color:var(--tb-text-secondary);">
-            还没有账号？<a href="#" id="showRegisterLink" style="color:var(--tb-orange);font-weight:600;">立即注册</a>
-          </p>
+<div id="app">
+  <!-- ===== LOGIN / REGISTER (shown when not logged in) ===== -->
+  <div v-if="!isLoggedIn" class="login-wrapper">
+    <!-- Login -->
+    <div v-if="authMode === 'login'" class="login-box">
+      <div class="logo-area">
+        <div class="logo-icon"><i class="fas fa-leaf"></i></div>
+        <h1>农禾坊</h1>
+        <p>特色农产品 · 源头直供 · 安心溯源</p>
+      </div>
+      <div style="display:grid;gap:14px;">
+        <div class="form-group">
+          <label class="form-label">用户名</label>
+          <input class="form-input" v-model="loginForm.username" placeholder="输入用户名" @keyup.enter="doLogin" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">密码</label>
+          <input class="form-input" v-model="loginForm.password" type="password" placeholder="输入密码" @keyup.enter="doLogin" autocomplete="current-password" />
         </div>
         <div v-if="loginError" class="form-error">{{ loginError }}</div>
         <button class="btn btn-primary btn-block btn-lg" @click="doLogin">
@@ -86,11 +62,73 @@
         <button class="btn btn-outline btn-block" @click="authMode='login'"><i class="fas fa-arrow-left"></i> 返回登录</button>
       </div>
     </div>
+  </div>
 
-    <!-- Main Page Area -->
-    <div id="pageArea" style="display:none;">
-      <div class="topbar"><div class="title-section"><h2 id="pageTitle">系统总览</h2><p class="subtitle" id="pageSubtitle"></p></div></div>
-      <div id="pageContainer"></div>
+  <!-- ===== MAIN APP SHELL (shown when logged in) ===== -->
+  <div v-else class="app-root">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" :class="{ open: sidebarOpen }">
+      <div class="sidebar-brand">
+        <div class="brand-icon"><i class="fas fa-leaf"></i></div>
+        <div>
+          <div class="brand-text">农禾坊</div>
+          <div class="brand-sub">农产品溯源平台</div>
+        </div>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-role">
+        <div class="role-dot" :style="{ background: currentRoleInfo.color }"></div>
+        <div class="role-info">
+          <div class="role-name">{{ currentRoleInfo.name }}</div>
+          <div class="role-user">{{ currentUser?.name || '' }}</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button v-for="item in menuItems" :key="item.key"
+          class="nav-item" :class="{ active: currentPage === item.key }"
+          @click="navigateTo(item.key)">
+          <i class="nav-icon fas" :class="item.icon"></i>
+          <span class="nav-label">{{ item.label }}</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="sidebar-user-btn" @click="navigateTo('profile')">
+          <div class="user-avatar">{{ (currentUser?.name || 'U')[0] }}</div>
+          <span>{{ currentUser?.name || '用户' }}</span>
+        </button>
+        <button class="logout-btn" @click="doLogout">
+          <i class="fas fa-sign-out-alt"></i> 退出登录
+        </button>
+      </div>
+    </aside>
+
+    <!-- Header -->
+    <header class="app-header">
+      <button class="header-action" @click="sidebarOpen = !sidebarOpen" style="display:none;" id="menuToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="header-breadcrumb">
+        <span class="current">{{ pageInfo.title }}</span>
+      </div>
+      <div class="header-search">
+        <i class="fas fa-search search-icon"></i>
+        <input v-model="globalSearch" placeholder="搜索农产品、产地、店铺..." @keyup.enter="doGlobalSearch" />
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-main">
+      <div v-if="isLegacyPage" id="legacy-page-container"></div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container">
+      <div v-for="(t, i) in toasts" :key="i" class="toast-item" :class="'toast-' + t.type">
+        <i v-if="t.type==='success'" class="fas fa-check-circle" style="color:var(--co-success);"></i>
+        <i v-else-if="t.type==='error'" class="fas fa-times-circle" style="color:var(--co-error);"></i>
+        <i v-else class="fas fa-info-circle" style="color:var(--co-info);"></i>
+        {{ t.message }}
+      </div>
     </div>
   </div>
 </div>
