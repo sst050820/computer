@@ -4,10 +4,12 @@ go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.9.1
+	github.com/go-sql-driver/mysql v1.10.0
 	github.com/hyperledger/fabric-sdk-go v1.0.0
 )
 
 require (
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect

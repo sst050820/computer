@@ -68,6 +68,13 @@ func Setup() *gin.Engine {
 	r.GET("/api/custom-orders", handler.HandleGetMyCustomOrders)
 	r.GET("/api/custom-orders/:id", handler.HandleGetCustomOrderDetail)
 	r.POST("/api/custom-orders/:id/respond", handler.HandleRespondToOrder)
+	r.DELETE("/api/custom-orders/:id", handler.HandleDeleteCustomOrder)
+
+	// 订单管理
+	r.POST("/api/orders", handler.HandleCreateOrder)
+	r.GET("/api/merchant/orders", handler.HandleGetMerchantOrders)
+	r.GET("/api/consumer/orders", handler.HandleGetConsumerOrders)
+	r.PUT("/api/orders/:id/status", handler.HandleUpdateOrderStatus)
 
 	// 需求市场
 	r.GET("/api/demand-market", handler.HandleGetDemandMarket)
@@ -81,6 +88,8 @@ func Setup() *gin.Engine {
 	r.POST("/api/review/:id/approve", handler.HandleApproveReview)
 	r.POST("/api/review/:id/reject", handler.HandleRejectReview)
 	r.POST("/api/qualifications/:id/revoke", handler.HandleRevokeQualification)
+	r.PUT("/api/qualifications/:id/renew", handler.HandleRenewQualification)
+	r.PUT("/api/qualifications/:id/restore", handler.HandleRestoreQualification)
 
 	// 管理员
 	r.GET("/api/admin/users", handler.HandleGetAllUsers)
