@@ -1,59 +1,74 @@
 package handler
 
 import (
-
-	"fruit_backend/internal/model"
+	"fruit_backend/internal/repository"
 
 	"github.com/gin-gonic/gin"
 )
 
 func HandleGetReviewList(c *gin.Context) {
-	var pending []model.Qualification
-	for _, q := range model.Qualifications {
-		if q.Status == "pending" { pending = append(pending, q) }
+	pending, err := repository.GetPendingReviews()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
 	}
-	if pending == nil { pending = []model.Qualification{} }
-	c.JSON(200, gin.H{"status":"success","data":pending})
+	c.JSON(200, gin.H{"status": "success", "data": pending})
 }
 
 func HandleApproveReview(c *gin.Context) {
 	id := c.Param("id")
 	var req struct{ CertifierID string `json:"certifier_id"` }
 	c.ShouldBindJSON(&req)
-	for i, q := range model.Qualifications {
-		if q.ID == id {
-			model.Qualifications[i].Status = "active"
-			if req.CertifierID != "" {
-				model.Qualifications[i].CertifierID = req.CertifierID
-				if u, ok := model.Users[req.CertifierID]; ok {
-					model.Qualifications[i].CertifierName = u.Name
-				}
-			}
-			c.JSON(200, gin.H{"status":"success","message":"资质审批通过","data":model.Qualifications[i]})
-			return
-		}
+
+	certifierName := ""
+	if u, err := repository.GetUserByID(req.CertifierID); err == nil && u != nil {
+		certifierName = u.Name
 	}
-	c.JSON(404, gin.H{"error":"申请不存在"})
+
+	if err := repository.ApproveQualification(id, req.CertifierID, certifierName); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "message": "资质审批通过"})
 }
 
 func HandleRejectReview(c *gin.Context) {
 	id := c.Param("id")
-	for i, q := range model.Qualifications {
-		if q.ID == id {
-			model.Qualifications[i].Status = "rejected"
-			c.JSON(200, gin.H{"status":"success","message":"已驳回"}); return
-		}
+	if err := repository.RejectQualification(id); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
 	}
-	c.JSON(404, gin.H{"error":"申请不存在"})
+	c.JSON(200, gin.H{"status": "success", "message": "已驳回"})
 }
 
 func HandleRevokeQualification(c *gin.Context) {
 	id := c.Param("id")
-	for i, q := range model.Qualifications {
-		if q.ID == id {
-			model.Qualifications[i].Status = "revoked"
-			c.JSON(200, gin.H{"status":"success","message":"资质已收回"}); return
-		}
+	if err := repository.RevokeQualification(id); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
 	}
-	c.JSON(404, gin.H{"error":"资质不存在"})
+	c.JSON(200, gin.H{"status": "success", "message": "资质已收回"})
+}
+
+func HandleRenewQualification(c *gin.Context) {
+	id := c.Param("id")
+	var req struct{ ExpiresAt string `json:"expires_at"` }
+	c.ShouldBindJSON(&req)
+	if req.ExpiresAt == "" {
+		req.ExpiresAt = "2027-12-31"
+	}
+	if err := repository.RenewQualification(id, req.ExpiresAt); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "message": "资质已续期"})
+}
+
+func HandleRestoreQualification(c *gin.Context) {
+	id := c.Param("id")
+	if err := repository.RestoreQualification(id); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "message": "资质已恢复"})
 }

@@ -5,18 +5,19 @@ import (
 	"time"
 
 	"fruit_backend/internal/model"
+	"fruit_backend/internal/repository"
 
 	"github.com/gin-gonic/gin"
 )
 
 func HandleGetMyQualifications(c *gin.Context) {
 	holderID := c.Query("holder_id")
-	var result []model.Qualification
-	for _, q := range model.Qualifications {
-		if q.HolderID == holderID { result = append(result, q) }
+	result, err := repository.GetQualificationsByHolder(holderID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
 	}
-	if result == nil { result = []model.Qualification{} }
-	c.JSON(200, gin.H{"status":"success","data":result})
+	c.JSON(200, gin.H{"status": "success", "data": result})
 }
 
 func HandleApplyQualification(c *gin.Context) {
@@ -28,15 +29,23 @@ func HandleApplyQualification(c *gin.Context) {
 		Evidence   string `json:"evidence"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error":"参数错误"}); return
+		c.JSON(400, gin.H{"error": "参数错误"})
+		return
 	}
+	allQuals, _ := repository.GetAllQualifications()
 	q := model.Qualification{
-		ID: fmt.Sprintf("Q%03d", len(model.Qualifications)+1),
-		HolderID: req.HolderID, HolderName: req.HolderName,
-		Type: req.Type, Value: req.Value, Status: "pending",
-		IssuedAt: time.Now().Format("2006-01-02"),
-		ExpiresAt: time.Now().AddDate(1, 0, 0).Format("2006-01-02"),
+		ID:         fmt.Sprintf("Q%03d", len(allQuals)+1),
+		HolderID:   req.HolderID,
+		HolderName: req.HolderName,
+		Type:       req.Type,
+		Value:      req.Value,
+		Status:     "pending",
+		IssuedAt:   time.Now().Format("2006-01-02"),
+		ExpiresAt:  time.Now().AddDate(1, 0, 0).Format("2006-01-02"),
 	}
-	model.Qualifications = append(model.Qualifications, q)
-	c.JSON(200, gin.H{"status":"success","data":q,"message":"资质申请已提交"})
+	if err := repository.CreateQualification(&q); err != nil {
+		c.JSON(500, gin.H{"error": "申请失败: " + err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "data": q, "message": "资质申请已提交"})
 }

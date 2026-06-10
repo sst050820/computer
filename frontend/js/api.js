@@ -87,6 +87,12 @@ var API = {
   revokeQualification: function(id) {
     return this._fetch("/api/qualifications/" + id + "/revoke", { method: "POST" });
   },
+  renewQualification: function(id, expiresAt) {
+    return this._fetch("/api/qualifications/" + id + "/renew", { method: "PUT", body: JSON.stringify({ expires_at: expiresAt }) });
+  },
+  restoreQualification: function(id) {
+    return this._fetch("/api/qualifications/" + id + "/restore", { method: "PUT" });
+  },
 
   // 管理员
   getAllUsers: function() { return this._fetch("/api/admin/users"); },
