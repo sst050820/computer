@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fruit_backend/internal/repository"
+	"fruit_backend/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,5 +35,23 @@ func HandleGetAllCustomOrders(c *gin.Context) {
 }
 
 func HandleSysUpdate(c *gin.Context) {
-	c.JSON(200, gin.H{"status": "success", "message": "平台认证规则已更新，受影响通行凭证需重新获取"})
+	// 调 ABE 服务更新系统主密钥
+	ok, msg := service.UpdateSystemKeys()
+	if ok {
+		// 标记所有旧资质为过期
+		repository.ExpireAllQualifications()
+		c.JSON(200, gin.H{"status": "success", "message": msg, "abe_rekey": true})
+	} else {
+		c.JSON(200, gin.H{"status": "partial", "message": "规则已更新，但ABE密钥服务未响应: " + msg, "abe_rekey": false})
+	}
+}
+
+func HandleDeleteUser(c *gin.Context) {
+	id := c.Param("id")
+	if err := repository.DeleteUser(id); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	// Check if actually deleted (affected rows is 0 for protected roles or missing user)
+	c.JSON(200, gin.H{"status": "success", "message": "账号已删除"})
 }

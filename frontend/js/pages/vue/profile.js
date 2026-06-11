@@ -110,8 +110,8 @@ var VueProfile = {
     goTo: function(page) { if (window.navigateTo) window.navigateTo(page); },
     doLogout: function() {
       localStorage.removeItem('agrichain_user');
-      localStorage.removeItem('fruit_cart');
-      localStorage.removeItem('fruit_msgs');
+      var keys = []; for (var i=0;i<localStorage.length;i++) { var k=localStorage.key(i); if (k&&k.indexOf('fruit_')===0) keys.push(k); }
+      keys.forEach(function(k) { localStorage.removeItem(k); });
       if (window.App) { window.App.currentUser = null; window.App.currentRole = null; if (window.App.cart) window.App.cart.splice(0, window.App.cart.length); }
       location.reload();
     }

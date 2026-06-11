@@ -39,11 +39,12 @@ var VueQualManagement = {
       }).catch(function() { self.loading = false; });
     },
     revokeQual: function(q) {
-      if (!confirm('确定收回「' + q.holder_name + '」的「' + q.type + '=' + q.value + '」资质吗？')) return;
+      if (!confirm('确定收回「' + q.holder_name + '」的「' + q.type + '=' + q.value + '」资质吗？\n\n⚠️ 此操作将触发ABE属性撤销，该用户将无法再解密相关内容。')) return;
       var self = this;
-      API.revokeQualification(q.id).then(function() {
+      API.revokeQualification(q.id).then(function(r) {
         self.fetchAll();
-        self.showMsg('已收回：' + q.type + '=' + q.value, 'info');
+        var msg = (r && r.message) ? r.message : ('已收回：' + q.type + '=' + q.value);
+        self.showMsg(msg, 'info');
       }).catch(function() { self.showMsg('操作失败', 'error'); });
     },
     renewQual: function(q) {

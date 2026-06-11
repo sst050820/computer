@@ -53,12 +53,14 @@ func Setup() *gin.Engine {
 	// 认证
 	r.POST("/api/auth/login", handler.HandleLogin)
 	r.POST("/api/auth/register", handler.HandleRegister)
+	r.PUT("/api/user/profile", handler.HandleUpdateUserProfile)
 
 	// 商品
 	r.GET("/api/products", handler.HandleGetProducts)
 	r.GET("/api/products/:id", handler.HandleGetProductDetail)
 	r.GET("/api/my-products", handler.HandleGetMyProducts)
 	r.POST("/api/products", handler.HandleCreateProduct)
+	r.DELETE("/api/products/:id", handler.HandleDeleteProduct)
 
 	// 产品档案
 	r.GET("/api/archive/:productId", handler.HandleGetArchive)
@@ -69,6 +71,8 @@ func Setup() *gin.Engine {
 	r.GET("/api/custom-orders/:id", handler.HandleGetCustomOrderDetail)
 	r.POST("/api/custom-orders/:id/respond", handler.HandleRespondToOrder)
 	r.DELETE("/api/custom-orders/:id", handler.HandleDeleteCustomOrder)
+	r.POST("/api/custom-orders/:id/decrypt", handler.HandleDecryptCustomOrder)
+	r.GET("/api/public-orders", handler.HandleGetPublicOrders)
 
 	// 订单管理
 	r.POST("/api/orders", handler.HandleCreateOrder)
@@ -93,6 +97,7 @@ func Setup() *gin.Engine {
 
 	// 管理员
 	r.GET("/api/admin/users", handler.HandleGetAllUsers)
+	r.DELETE("/api/admin/users/:id", handler.HandleDeleteUser)
 	r.GET("/api/admin/qualifications", handler.HandleGetAllQualifications)
 	r.GET("/api/admin/orders", handler.HandleGetAllCustomOrders)
 	r.POST("/api/admin/sys-update", handler.HandleSysUpdate)

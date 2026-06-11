@@ -96,7 +96,7 @@ var VueCart = {
           var item = this.list[i];
           window.App.cart.push({ id: item.id, name: item.name, price: item.price, image: item.image, qty: item.qty, shop_id: item.shop_id, shop_name: item.shop_name });
         }
-        localStorage.setItem('fruit_cart', JSON.stringify(window.App.cart));
+        localStorage.setItem(window.cartKey ? window.cartKey() : 'fruit_cart_guest', JSON.stringify(window.App.cart));
       }
     },
     inc: function(idx) {
@@ -161,7 +161,7 @@ var VueCart = {
         self.err = '网络错误: ' + (e && e.message ? e.message : '请检查服务');
       });
     },
-    reset: function() { this.list = []; this.done = false; this.cnt = 0; if (window.App && window.App.cart) { window.App.cart.splice(0, window.App.cart.length); localStorage.setItem('fruit_cart', '[]'); } },
+    reset: function() { this.list = []; this.done = false; this.cnt = 0; if (window.App && window.App.cart) { window.App.cart.splice(0, window.App.cart.length); localStorage.setItem(window.cartKey ? window.cartKey() : 'fruit_cart_guest', '[]'); } },
     goShop: function() { if (window.navigateTo) window.navigateTo('discovery'); }
   }
 };

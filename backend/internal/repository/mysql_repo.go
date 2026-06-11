@@ -42,6 +42,16 @@ func GetUserByID(id string) (*model.User, error) {
 	return u, err
 }
 
+func DeleteUser(id string) error {
+	_, err := DB.Exec("DELETE FROM users WHERE id=? AND role IN ('consumer','merchant')", id)
+	return err
+}
+
+func UpdateUserProfile(id, name, phone, location string) error {
+	_, err := DB.Exec("UPDATE users SET name=?, phone=?, location=? WHERE id=?", name, phone, location, id)
+	return err
+}
+
 func GetAllUsers() ([]model.User, error) {
 	rows, err := DB.Query("SELECT id, username, name, role, phone, location FROM users ORDER BY created_at DESC")
 	if err != nil {
@@ -105,6 +115,11 @@ func GetProducts(keyword, category, origin string) ([]model.Product, error) {
 		prods = []model.Product{}
 	}
 	return prods, nil
+}
+
+func DeleteProduct(id string) error {
+	_, err := DB.Exec("DELETE FROM products WHERE id=?", id)
+	return err
 }
 
 func GetProductByID(id string) (*model.Product, error) {
@@ -234,6 +249,21 @@ func DeleteCustomOrder(id string) error {
 	return err
 }
 
+func GetPublicOrders() ([]*model.CustomOrder, error) {
+	rows, err := DB.Query("SELECT id, title, budget, policy, consumer_name, status, created_at FROM custom_orders WHERE status='active' ORDER BY created_at DESC")
+	if err != nil { return nil, err }
+	defer rows.Close()
+	var orders []*model.CustomOrder
+	for rows.Next() {
+		o := &model.CustomOrder{}
+		if err := rows.Scan(&o.ID, &o.Title, &o.Budget, &o.Policy, &o.ConsumerName, &o.Status, &o.CreatedAt); err != nil { return nil, err }
+		o.Responses = []model.OrderResponse{}
+		orders = append(orders, o)
+	}
+	if orders == nil { orders = []*model.CustomOrder{} }
+	return orders, nil
+}
+
 func GetAllCustomOrders() ([]*model.CustomOrder, error) {
 	rows, err := DB.Query("SELECT id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, status, created_at FROM custom_orders ORDER BY created_at DESC")
 	if err != nil {
@@ -301,6 +331,16 @@ func GetAllQualifications() ([]model.Qualification, error) {
 	return scanQualifications(rows)
 }
 
+func GetQualificationByID(id string) (*model.Qualification, error) {
+	q := &model.Qualification{}
+	err := DB.QueryRow(
+		"SELECT id, holder_id, holder_name, qual_type, qual_value, status, certifier_id, certifier_name, IFNULL(issued_at,''), IFNULL(expires_at,'') FROM qualifications WHERE id=?",
+		id,
+	).Scan(&q.ID, &q.HolderID, &q.HolderName, &q.Type, &q.Value, &q.Status, &q.CertifierID, &q.CertifierName, &q.IssuedAt, &q.ExpiresAt)
+	if err == sql.ErrNoRows { return nil, nil }
+	return q, err
+}
+
 func GetPendingReviews() ([]model.Qualification, error) {
 	rows, err := DB.Query("SELECT id, holder_id, holder_name, qual_type, qual_value, status, certifier_id, certifier_name, IFNULL(issued_at,''), IFNULL(expires_at,'') FROM qualifications WHERE status='pending' ORDER BY issued_at")
 	if err != nil {
@@ -335,6 +375,11 @@ func ApproveQualification(id, certifierID, certifierName string) error {
 
 func RejectQualification(id string) error {
 	_, err := DB.Exec("UPDATE qualifications SET status='rejected' WHERE id=?", id)
+	return err
+}
+
+func ExpireAllQualifications() error {
+	_, err := DB.Exec("UPDATE qualifications SET status='expired' WHERE status='active'")
 	return err
 }
 
@@ -375,7 +420,30 @@ func GetArchive(productID string) ([]model.ArchiveNode, error) {
 	if nodes == nil {
 		nodes = []model.ArchiveNode{}
 	}
+	// Fallback: return demo data if archive is empty
+	if len(nodes) == 0 {
+		nodes = getDemoArchive(productID)
+	}
 	return nodes, nil
+}
+
+func getDemoArchive(productID string) []model.ArchiveNode {
+	demo := map[string][]model.ArchiveNode{
+		"p1": {{Step:"种植",Location:"福建安溪茶园基地",Time:"2026-03-15 08:00",Desc:"春季新芽采摘，有机种植标准，土壤检测合格",Public:true},{Step:"加工",Location:"福建名品加工车间",Time:"2026-03-20 14:00",Desc:"传统工艺炒制，质检合格入库",Public:true},{Step:"质检",Location:"福建省茶叶检测中心",Time:"2026-04-01 10:00",Desc:"农残检测、重金属检测全部通过",Public:false},{Step:"运输",Location:"顺丰冷链枢纽",Time:"2026-04-05 09:00",Desc:"恒温冷链运输，全程GPS追踪",Public:false},{Step:"到店",Location:"品牌旗舰店",Time:"2026-04-10 16:00",Desc:"上架销售，扫码可追溯",Public:true}},
+		"p2": {{Step:"种植",Location:"安溪铁观音种植基地",Time:"2026-02-10 07:00",Desc:"春季铁观音采摘",Public:true},{Step:"加工",Location:"安溪茶厂加工车间",Time:"2026-02-20 09:00",Desc:"半发酵工艺处理",Public:true},{Step:"质检",Location:"安溪质检中心",Time:"2026-03-01 14:00",Desc:"品质检测合格",Public:false},{Step:"运输",Location:"福建物流中心",Time:"2026-03-10 08:00",Desc:"标准物流运输",Public:false},{Step:"到店",Location:"全国茶叶专卖店",Time:"2026-03-15 10:00",Desc:"上架销售",Public:true}},
+		"p4": {{Step:"种植",Location:"山东烟台苹果园",Time:"2026-04-01 06:00",Desc:"红富士苹果采摘，糖度检测达标",Public:true},{Step:"分选",Location:"烟台果品分选中心",Time:"2026-04-02 10:00",Desc:"自动化分选，按大小分级",Public:true},{Step:"质检",Location:"烟台质检站",Time:"2026-04-03 09:00",Desc:"农残检测合格",Public:false},{Step:"运输",Location:"山东冷链物流",Time:"2026-04-05 14:00",Desc:"冷链运输至全国",Public:false},{Step:"到店",Location:"全国超市",Time:"2026-04-10 08:00",Desc:"上架销售",Public:true}},
+	}
+	if nodes, ok := demo[productID]; ok {
+		return nodes
+	}
+	// Generic demo for any product
+	return []model.ArchiveNode{
+		{Step:"种植",Location:"原产地农场",Time:"2026-03-15",Desc:"标准化种植流程",Public:true},
+		{Step:"加工",Location:"加工车间",Time:"2026-03-20",Desc:"产品加工包装",Public:true},
+		{Step:"质检",Location:"检测中心",Time:"2026-04-01",Desc:"质量检测通过（加密存储）",Public:false},
+		{Step:"运输",Location:"物流中心",Time:"2026-04-05",Desc:"运输配送（加密存储）",Public:false},
+		{Step:"到店",Location:"销售终端",Time:"2026-04-10",Desc:"上架销售可扫码追溯",Public:true},
+	}
 }
 
 func AddArchiveNode(productID string, n *model.ArchiveNode) error {

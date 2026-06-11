@@ -110,5 +110,18 @@ func HandleRegister(c *gin.Context) {
 	})
 }
 
-// Suppress unused import warning
+func HandleUpdateUserProfile(c *gin.Context) {
+	var req struct {
+		UserID   string `json:"user_id"`
+		Name     string `json:"name"`
+		Phone    string `json:"phone"`
+		Location string `json:"location"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil { c.JSON(400, gin.H{"error":"参数错误"}); return }
+	if err := repository.UpdateUserProfile(req.UserID, req.Name, req.Phone, req.Location); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()}); return
+	}
+	c.JSON(200, gin.H{"status":"success","message":"信息已更新"})
+}
+
 var _ = strings.EqualFold

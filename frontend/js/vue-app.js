@@ -1,5 +1,5 @@
 /* ============================================================
-   农淘 — Vue 3 Application Shell
+   农禾坊 — Vue 3 Application Shell
    ============================================================ */
 
 var { createApp, ref, reactive, computed, onMounted, nextTick } = Vue;
@@ -142,7 +142,7 @@ var VueApp = createApp({
     }
 
     function doLogout() {
-      localStorage.removeItem('agrichain_user');
+      localStorage.removeItem('agrichain_user'); var keys=[]; for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf('fruit_')===0)keys.push(k);} keys.forEach(function(k){localStorage.removeItem(k);});
       isLoggedIn.value = false; currentUser.value = null;
       if (window.App) { window.App.cart.splice(0, window.App.cart.length); }
       window.App.currentUser = null; window.App.currentRole = null;
@@ -187,9 +187,10 @@ var VueApp = createApp({
       // Init global helpers (MUST run before handleLoginSuccess)
       window.showToast = showToast;
       window.navigateTo = navigateTo;
+      window.cartKey = function() { var u = window.App&&window.App.currentUser; return 'fruit_cart_'+(u?u.id:'guest'); };
 
       // Load cart from localStorage
-      var savedCart = localStorage.getItem('fruit_cart');
+      var savedCart = localStorage.getItem(window.cartKey());
       var initialCart = [];
       if (savedCart) { try { initialCart = JSON.parse(savedCart); } catch(e) {} }
       if (window.App) {
@@ -203,13 +204,13 @@ var VueApp = createApp({
           }
           if (existing) { existing.qty = (existing.qty || 1) + 1; }
           else { this.cart.push({ id: product.id, name: product.name, price: product.price, image: product.image || '📦', qty: 1, shop_id: product.shop_id || '', shop_name: product.shop_name || '' }); }
-          localStorage.setItem('fruit_cart', JSON.stringify(this.cart));
+          localStorage.setItem(window.cartKey(), JSON.stringify(this.cart));
           showToast('已加入购物车', 'success');
         };
         // Save cart to localStorage periodically
         setInterval(function() {
           if (window.App && window.App.cart && window.App.cart.length > 0) {
-            localStorage.setItem('fruit_cart', JSON.stringify(window.App.cart));
+            localStorage.setItem(window.cartKey(), JSON.stringify(window.App.cart));
           }
         }, 3000);
       }

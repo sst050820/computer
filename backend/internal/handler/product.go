@@ -63,3 +63,12 @@ func HandleCreateProduct(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"status": "success", "data": p, "message": "商品发布成功"})
 }
+
+func HandleDeleteProduct(c *gin.Context) {
+	id := c.Param("id")
+	if err := repository.DeleteProduct(id); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "message": "商品已下架"})
+}

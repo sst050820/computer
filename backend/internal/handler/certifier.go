@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fruit_backend/internal/repository"
+	"fruit_backend/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -47,7 +48,15 @@ func HandleRevokeQualification(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"status": "success", "message": "资质已收回"})
+	// 触发 ABE 属性撤销
+	qual, _ := repository.GetQualificationByID(id)
+	abeMsg := ""
+	if qual != nil {
+		ok, msg := service.RevokeAttribute(qual.Type, qual.Value)
+		if ok { abeMsg = " | ABE: " + msg }
+	}
+
+	c.JSON(200, gin.H{"status": "success", "message": "资质已收回" + abeMsg})
 }
 
 func HandleRenewQualification(c *gin.Context) {

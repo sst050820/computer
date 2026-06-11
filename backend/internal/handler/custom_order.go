@@ -113,3 +113,76 @@ func HandleDeleteCustomOrder(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"status": "success", "message": "需求已删除"})
 }
+
+func HandleGetPublicOrders(c *gin.Context) {
+	orders, err := repository.GetPublicOrders()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "data": orders})
+}
+
+// HandleDecryptCustomOrder ABE解密验证：商家用资质尝试解密需求内容
+func HandleDecryptCustomOrder(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		MerchantID string `json:"merchant_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "参数错误"})
+		return
+	}
+
+	// 获取需求
+	order, err := repository.GetCustomOrderByID(id)
+	if err != nil || order == nil {
+		c.JSON(404, gin.H{"error": "需求不存在"})
+		return
+	}
+
+	// 获取商家有效资质
+	quals, _ := repository.GetQualificationsByHolder(req.MerchantID)
+	attrs := make(map[string]string)
+	for _, q := range quals {
+		if q.Status == "active" {
+			attrs[q.Type] = q.Value
+		}
+	}
+
+	// 尝试 ABE 解密
+	plaintext, err := service.DecryptWithABE(order.Ciphertext, attrs)
+	if err != nil {
+		// 降级：属性匹配验证
+		if service.MatchAttributes(order.Policy, attrs) {
+			c.JSON(200, gin.H{
+				"status":      "success",
+				"decrypted":   true,
+				"plaintext":   order.Description,
+				"method":      "attribute_match",
+				"description": order.Description,
+				"budget":      order.Budget,
+			})
+			return
+		}
+		c.JSON(403, gin.H{
+			"status":    "denied",
+			"decrypted": false,
+			"message":   "您的资质不满足该需求的可见条件",
+			"policy":    service.PolicyToDisplay(order.Policy),
+			"required":  order.Conditions,
+			"yours":     attrs,
+		})
+		return
+	}
+
+	// ABE 解密成功
+	c.JSON(200, gin.H{
+		"status":      "success",
+		"decrypted":   true,
+		"plaintext":   plaintext,
+		"method":      "abe_decrypt",
+		"description": order.Description,
+		"budget":      order.Budget,
+	})
+}

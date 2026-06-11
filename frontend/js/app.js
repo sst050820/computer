@@ -1,4 +1,4 @@
-// 农淘 — Legacy App Shell (Phase 1: Vue owns UI, App keeps state + cart + page renderer bridge)
+// 农禾坊 — Legacy App Shell (Phase 1: Vue owns UI, App keeps state + cart + page renderer bridge)
 var App = {
   currentUser: null, currentRole: null,
   cart: [], // in-memory cart

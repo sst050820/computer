@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fruit_backend/internal/model"
 	"fruit_backend/internal/repository"
 
 	"github.com/gin-gonic/gin"
@@ -8,10 +9,21 @@ import (
 
 func HandleRegulatorSearch(c *gin.Context) {
 	keyword := c.Query("keyword")
-	products, err := repository.GetProducts(keyword, "", "")
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
+	// Try exact ID match first
+	products := []model.Product{}
+	if p, err := repository.GetProductByID(keyword); err == nil && p != nil {
+		products = append(products, *p)
+	}
+	// Also search by name
+	if nameResults, err := repository.GetProducts(keyword, "", ""); err == nil {
+		for _, p := range nameResults {
+			// Avoid duplicate
+			found := false
+			for _, existing := range products {
+				if existing.ID == p.ID { found = true; break }
+			}
+			if !found { products = append(products, p) }
+		}
 	}
 	var result []map[string]interface{}
 	for _, p := range products {

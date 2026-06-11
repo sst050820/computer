@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 农淘 — 一键启动全部服务
+# 农禾坊 — 一键启动全部服务
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG="$ROOT/logs"

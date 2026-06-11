@@ -1,5 +1,5 @@
 ﻿// ============================================================
-// 农淘 — Taobao-style Page Renderers
+// 农禾坊 — Taobao-style Page Renderers
 // ============================================================
 var PageRenderers = {
 
@@ -40,7 +40,7 @@ var PageRenderers = {
       '<select id="searchCategory" style="flex:1;min-width:100px;"><option value="">全部分类</option><option>茶叶</option><option>果蔬</option><option>谷物</option><option>畜牧</option></select>' +
       '<select id="searchOrigin" style="flex:1;min-width:100px;"><option value="">全部产地</option><option>福建</option><option>山东</option><option>浙江</option><option>云南</option></select>' +
       '<button class="btn" id="searchBtn"><i class="fas fa-search"></i> 搜索</button></div></div>' +
-      '<div class="tb-section-header"><h3>🔥 热销推荐</h3><a class="tb-more" href="#" onclick="App.navigate('discovery');return false;">查看更多 ›</a></div>' +
+      '<div class="tb-section-header"><h3>🔥 热销推荐</h3><a class="tb-more" href="#" onclick="App.navigate(\"discovery\");return false;">查看更多 ›</a></div>' +
       '<div id="productResults" class="tb-product-grid"></div></div>';
     var bannerEl = document.getElementById("homeBanner");
     setInterval(function() {
@@ -218,7 +218,7 @@ var PageRenderers = {
         '<div style="text-align:center;padding:60px;">' +
         '<i class="fas fa-shopping-cart" style="font-size:4rem;opacity:0.1;"></i>' +
         '<h3 style="margin-top:16px;color:var(--tb-text);">购物车是空的</h3>' +
-        '<p style="color:var(--tb-text-secondary);margin-top:8px;">去 <a href="#" onclick="App.navigate('discovery');return false;" style="color:var(--tb-orange);font-weight:600;">发现好物</a> 逛逛吧</p></div></div>';
+        '<p style="color:var(--tb-text-secondary);margin-top:8px;">去 <a href="#" onclick="App.navigate(\"discovery\");return false;" style="color:var(--tb-orange);font-weight:600;">发现好物</a> 逛逛吧</p></div></div>';
       return;
     }
     var total = 0;

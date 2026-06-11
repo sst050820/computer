@@ -67,5 +67,4 @@ const VueDashboard = {
   methods: {
     goTo: function(page) { if (window.navigateTo) window.navigateTo(page); }
   }
-  }
 };
