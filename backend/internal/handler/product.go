@@ -72,3 +72,18 @@ func HandleDeleteProduct(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"status": "success", "message": "商品已下架"})
 }
+
+// HandleUpdateProduct 商家编辑商品
+func HandleUpdateProduct(c *gin.Context) {
+	id := c.Param("id")
+	var p model.Product
+	if err := c.ShouldBindJSON(&p); err != nil {
+		c.JSON(400, gin.H{"error": "参数错误"})
+		return
+	}
+	if err := repository.UpdateProduct(id, &p); err != nil {
+		c.JSON(500, gin.H{"error": "更新失败: " + err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "message": "商品已更新"})
+}

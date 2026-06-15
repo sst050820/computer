@@ -50,7 +50,7 @@ var VueMessages = {
     return {
       tab: 'all',
       detail: null,
-      tabs: [{ key:'all',label:'全部' },{ key:'unread',label:'未读' },{ key:'system',label:'系统通知' }],
+      tabs: [{ key:'all',label:'全部' },{ key:'unread',label:'未读' },{ key:'order',label:'订单' },{ key:'system',label:'系统通知' }],
       msgs: []
     };
   },
@@ -67,6 +67,7 @@ var VueMessages = {
       return this.msgs.filter(function(m) {
         if (self.tab === 'unread') return m.unread;
         if (self.tab === 'system') return m.type === 'system';
+	        if (self.tab === 'order') return m.type === 'order';
         return true;
       });
     }

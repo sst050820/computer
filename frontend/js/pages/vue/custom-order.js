@@ -8,6 +8,8 @@ var VueCustomOrder = {
     '<div class="form-group"><label class="form-label">需求标题 *</label><input class="form-input" v-model="title" placeholder="例如：牛奶味茶饼定制" /></div>' +
     '<div class="form-group"><label class="form-label">详细描述</label><textarea class="form-textarea" v-model="description" rows="3" placeholder="描述想要的农产品规格、口味、数量等"></textarea></div>' +
     '<div class="form-group"><label class="form-label">期望预算</label><input class="form-input" v-model="budget" placeholder="例如：5000-10000元" /></div>' +
+    '<div class="form-group"><label class="form-label">联系方式 *</label><input class="form-input" v-model="contact" placeholder="手机号或微信号，商家接单后会联系您" /></div>' +
+    '<div class="form-group"><label class="form-label">快递地址 *</label><input class="form-input" v-model="address" placeholder="收货省市区+详细地址，例如：福建省厦门市思明区XX路XX号" /></div>' +
     '<div class="form-group"><label class="form-label">设定可见条件（满足条件的厂家才能看到您的需求）</label>' +
     '<div class="cond-selector">' +
     '<div v-for="ct in conditionTypes" :key="ct.key" class="cond-row">' +
@@ -25,7 +27,7 @@ var VueCustomOrder = {
     '</div></div>',
   data: function() {
     return {
-      title: '', description: '', budget: '',
+      title: '', description: '', budget: '', contact: '', address: '',
       conditions: { Location: '', Capability: '', Quality: '', Grade: '', Organic: '' },
       submitting: false, result: null, errorMsg: '',
       conditionTypes: [
@@ -41,13 +43,16 @@ var VueCustomOrder = {
     submit: function() {
       var self = this;
       if (!this.title.trim()) { this.errorMsg = '请填写需求标题'; return; }
+      if (!this.contact.trim()) { this.errorMsg = '请填写联系方式，方便商家接单后联系您'; return; }
+      if (!this.address.trim()) { this.errorMsg = '请填写快递地址，商家需要知道收货地址'; return; }
       this.submitting = true; this.errorMsg = '';
       var user = window.App && window.App.currentUser;
       var conds = {};
       for (var k in this.conditions) { if (this.conditions[k]) conds[k] = this.conditions[k]; }
       API.createCustomOrder({
         title: this.title.trim(), description: this.description.trim() || this.title.trim(),
-        budget: this.budget.trim(), conditions: conds, consumer_id: user ? user.id : ''
+        budget: this.budget.trim(), conditions: conds, consumer_id: user ? user.id : '',
+        contact: this.contact.trim(), address: this.address.trim()
       }).then(function(res) {
         self.submitting = false;
         if (res.status === 'success') { self.result = res.data || { id: 'N/A' }; }

@@ -25,6 +25,7 @@ type CustomOrder struct {
 	Conditions map[string]string `json:"conditions"`; Policy string `json:"policy"`
 	SessionID string `json:"session_id"`; Ciphertext string `json:"ciphertext"`
 	ConsumerID string `json:"consumer_id"`; ConsumerName string `json:"consumer_name"`
+	Contact string `json:"contact"`; Address string `json:"address"`
 	Status string `json:"status"`; CreatedAt string `json:"created_at"`
 	Responses []OrderResponse `json:"responses,omitempty"`
 }
@@ -52,10 +53,11 @@ type LoginRequest struct {
 type Order struct {
 	ID string `json:"id"`; ConsumerID string `json:"consumer_id"`
 	ConsumerName string `json:"consumer_name"`; MerchantID string `json:"merchant_id"`
-	ProductID string `json:"product_id"`; ProductName string `json:"product_name"`
-	Quantity int `json:"quantity"`; Price float64 `json:"price"`
-	Total float64 `json:"total"`; Status string `json:"status"`
-	Remark string `json:"remark"`; CreatedAt string `json:"created_at"`
+	MerchantName string `json:"merchant_name"`; ProductID string `json:"product_id"`
+	ProductName string `json:"product_name"`; Quantity int `json:"quantity"`
+	Price float64 `json:"price"`; Total float64 `json:"total"`
+	Status string `json:"status"`; Remark string `json:"remark"`
+	CreatedAt string `json:"created_at"`
 }
 var (
 	ABESessions = make(map[string]string)

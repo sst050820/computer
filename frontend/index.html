@@ -6,7 +6,7 @@
   <title>农禾坊 | 特色农产品购物平台</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-  <link rel="stylesheet" href="/css/app.css" />
+  <link rel="stylesheet" href="/css/app.css?v=2" />
 </head>
 <body>
 
@@ -89,6 +89,7 @@
           @click="navigateTo(item.key)">
           <i class="nav-icon fas" :class="item.icon"></i>
           <span class="nav-label">{{ item.label }}</span>
+          <span v-if="item.key==='messages'&&unreadMsgCount>0" style="background:var(--co-error);color:#fff;border-radius:var(--rd-full);padding:1px 7px;font-size:0.65rem;font-weight:700;margin-left:auto;">{{ unreadMsgCount }}</span>
         </button>
       </nav>
       <div class="sidebar-footer">
@@ -148,38 +149,39 @@
 <script src="/js/components/base-empty.js"></script>
 <!-- Vue Page Components (Phase 3) -->
 <script src="/js/pages/vue/discovery.js"></script>
-<script src="/js/pages/vue/cart.js"></script>
-<script src="/js/pages/vue/dashboard.js"></script>
-<script src="/js/pages/vue/profile.js"></script>
-<script src="/js/pages/vue/custom-order.js"></script>
-<script src="/js/pages/vue/demand-market.js"></script>
-<script src="/js/pages/vue/qualifications.js"></script>
-<script src="/js/pages/vue/product-list.js"></script>
-<script src="/js/pages/vue/my-orders.js"></script>
-<script src="/js/pages/vue/review-list.js"></script>
-<script src="/js/pages/vue/archive-search.js"></script>
-<script src="/js/pages/vue/emergency.js"></script>
-<script src="/js/pages/vue/user-management.js"></script>
+<script src="/js/pages/vue/cart.js?v=3"></script>
+<script src="/js/pages/vue/dashboard.js?v=3"></script>
+<script src="/js/pages/vue/profile.js?v=2"></script>
+<script src="/js/pages/vue/custom-order.js?v=2"></script>
+<script src="/js/pages/vue/demand-market.js?v=4"></script>
+<script src="/js/pages/vue/qualifications.js?v=3"></script>
+<script src="/js/pages/vue/product-list.js?v=4"></script>
+<script src="/js/pages/vue/my-orders.js?v=4"></script>
+<script src="/js/pages/vue/consumer-orders.js?v=7"></script>
+<script src="/js/pages/vue/review-list.js?v=4"></script>
+<script src="/js/pages/vue/archive-search.js?v=2"></script>
+<script src="/js/pages/vue/emergency.js?v=2"></script>
+<script src="/js/pages/vue/user-management.js?v=2"></script>
 <script src="/js/pages/vue/rule-management.js"></script>
-<script src="/js/pages/vue/order-square.js"></script>
+<script src="/js/pages/vue/order-square.js?v=3"></script>
 <script src="/js/pages/vue/messages.js"></script>
-<script src="/js/pages/vue/merchant-orders.js"></script>
+<script src="/js/pages/vue/merchant-orders.js?v=4"></script>
 <script src="/js/pages/vue/my-shop.js"></script>
-<script src="/js/pages/vue/review-history.js"></script>
-<script src="/js/pages/vue/qual-management.js"></script>
-<script src="/js/pages/vue/statistics.js"></script>
-<script src="/js/pages/vue/certifier-management.js"></script>
-<script src="/js/pages/vue/content-audit.js"></script>
-<script src="/js/pages/vue/dispute.js"></script>
-<script src="/js/pages/vue/reports.js"></script>
-<script src="/js/pages/vue/merchant-audit.js"></script>
-<script src="/js/pages/vue/product-spot.js"></script>
+<script src="/js/pages/vue/review-history.js?v=2"></script>
+<script src="/js/pages/vue/qual-management.js?v=3"></script>
+<script src="/js/pages/vue/statistics.js?v=2"></script>
+<script src="/js/pages/vue/certifier-management.js?v=3"></script>
+<script src="/js/pages/vue/content-audit.js?v=3"></script>
+<script src="/js/pages/vue/dispute.js?v=4"></script>
+<script src="/js/pages/vue/reports.js?v=2"></script>
+<script src="/js/pages/vue/merchant-audit.js?v=2"></script>
+<script src="/js/pages/vue/product-spot.js?v=2"></script>
 <!-- Legacy Components -->
 <script src="/js/components/product-card.js"></script>
 <script src="/js/components/condition-selector.js"></script>
 <script src="/js/components/qualification-tags.js"></script>
 <script src="/js/api.js"></script>
-<script src="/js/app.js"></script>
-<script src="/js/vue-app.js"></script>
+<script src="/js/app.js?v=3"></script>
+<script src="/js/vue-app.js?v=3"></script>
 </body>
 </html>

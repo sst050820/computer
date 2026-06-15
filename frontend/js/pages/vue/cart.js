@@ -3,7 +3,7 @@ var VueCart = {
   name: 'VueCart',
   template: '<div>' +
     '<base-empty v-if="list.length===0" icon="fa-shopping-cart" title="购物车是空的">' +
-    '<base-button variant="secondary" @click="goShop">去逛逛</base-button>' +
+    '<button @click="goShop" style="display:inline-flex;align-items:center;gap:6px;padding:10px 28px;border:none;border-radius:var(--rd-md);font-size:0.9rem;font-weight:600;cursor:pointer;background:var(--co-primary-50);color:var(--co-primary-600);box-shadow:0 1px 3px rgba(0,0,0,0.06);transition:all 0.2s;" onmouseover="this.style.background=\'var(--co-primary-100)\';this.style.boxShadow=\'0 3px 8px rgba(0,0,0,0.1)\';this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.background=\'var(--co-primary-50)\';this.style.boxShadow=\'0 1px 3px rgba(0,0,0,0.06)\';this.style.transform=\'none\'">去逛逛</button>' +
     '</base-empty>' +
 
     '<div v-if="list.length>0">' +
@@ -26,7 +26,7 @@ var VueCart = {
 
     '<div class="cart-summary">' +
     '<div class="cart-total">合计 <span class="total-price">¥{{ total.toFixed(1) }}</span></div>' +
-    '<base-button size="lg" @click="openPay">去结算</base-button>' +
+    '<button @click="openPay" style="display:inline-flex;align-items:center;gap:8px;padding:14px 36px;border:none;border-radius:var(--rd-lg);font-size:1.05rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 4px 16px rgba(45,106,79,0.35);transition:all 0.2s;letter-spacing:0.03em;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 24px rgba(45,106,79,0.45)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 4px 16px rgba(45,106,79,0.35)\'"><i class="fas fa-shopping-cart"></i> 去结算</button>' +
     '</div></div>' +
 
     /* Payment modal */
@@ -47,15 +47,17 @@ var VueCart = {
     '<div style="text-align:center;color:var(--co-neutral-400);"><i class="fas fa-qrcode" style="font-size:3rem;display:block;margin-bottom:6px;"></i><span style="font-size:0.8rem;">微信/支付宝扫码</span></div></div>' +
     '<p style="font-size:0.75rem;color:var(--co-neutral-500);">二维码区域 · 接入真实支付后替换</p></div>' +
     '<div style="display:flex;gap:10px;">' +
-    '<base-button block variant="outline" @click="paying=false">返回</base-button>' +
-    '<base-button block @click="doPay" :loading="submitting">确认支付 ¥{{ total.toFixed(1) }}</base-button></div>' +
+    '<button @click="paying=false" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;padding:12px 24px;border:1px solid var(--co-neutral-300);border-radius:var(--rd-md);font-size:0.9rem;font-weight:500;cursor:pointer;background:#fff;color:var(--co-neutral-600);transition:all 0.2s;" onmouseover="this.style.background=\'var(--co-neutral-50)\';this.style.borderColor=\'var(--co-neutral-400)\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'var(--co-neutral-300)\'">返回</button>' +
+    '<button @click="doPay" :disabled="submitting" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1;padding:12px 24px;border:none;border-radius:var(--rd-md);font-size:0.9rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 3px 12px rgba(45,106,79,0.3);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 5px 18px rgba(45,106,79,0.4)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 3px 12px rgba(45,106,79,0.3)\'"><i v-if="submitting" class="fas fa-spinner fa-spin"></i><i v-else class="fas fa-check"></i> 确认支付 ¥{{ total.toFixed(1) }}</button></div>' +
     '<div v-if="err" style="margin-top:10px;color:var(--co-error);text-align:center;font-size:0.85rem;">{{ err }}</div>' +
     '</div></div></div>' +
 
     '<div v-if="done" class="card" style="text-align:center;border:2px solid var(--co-success);">' +
     '<i class="fas fa-check-circle" style="font-size:3rem;color:var(--co-success);display:block;margin-bottom:10px;"></i>' +
     '<h3>支付成功！</h3><p>共 {{ cnt }} 笔订单已生成</p>' +
-    '<base-button variant="secondary" @click="reset">继续逛逛</base-button></div>' +
+    '<div style="display:flex;gap:10px;justify-content:center;margin-top:16px;">' +
+    '<button @click="goOrders" style="display:inline-flex;align-items:center;gap:6px;padding:10px 28px;border:none;border-radius:var(--rd-md);font-size:0.9rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 2px 8px rgba(45,106,79,0.25);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 14px rgba(45,106,79,0.35)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 8px rgba(45,106,79,0.25)\'"><i class="fas fa-receipt"></i> 查看订单</button>' +
+    '<button @click="reset" style="display:inline-flex;align-items:center;gap:6px;padding:10px 28px;border:1px solid var(--co-neutral-300);border-radius:var(--rd-md);font-size:0.9rem;font-weight:500;cursor:pointer;background:#fff;color:var(--co-neutral-600);transition:all 0.2s;" onmouseover="this.style.background=\'var(--co-neutral-50)\';this.style.borderColor=\'var(--co-neutral-400)\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'var(--co-neutral-300)\'">继续逛逛</button></div></div>' +
     '</div>',
 
   data: function() {
@@ -162,6 +164,7 @@ var VueCart = {
       });
     },
     reset: function() { this.list = []; this.done = false; this.cnt = 0; if (window.App && window.App.cart) { window.App.cart.splice(0, window.App.cart.length); localStorage.setItem(window.cartKey ? window.cartKey() : 'fruit_cart_guest', '[]'); } },
-    goShop: function() { if (window.navigateTo) window.navigateTo('discovery'); }
+    goShop: function() { if (window.navigateTo) window.navigateTo('discovery'); },
+    goOrders: function() { this.reset(); if (window.navigateTo) window.navigateTo('consumer-orders'); }
   }
 };

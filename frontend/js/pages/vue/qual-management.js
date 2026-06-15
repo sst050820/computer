@@ -8,14 +8,23 @@ var VueQualManagement = {
     '<table class="data-table"><thead><tr><th>持有方</th><th>资质</th><th>状态</th><th>颁发日期</th><th>到期日期</th><th>操作</th></tr></thead><tbody>' +
     '<tr v-for="q in quals" :key="q.id">' +
     '<td>{{ q.holder_name }}</td>' +
-    '<td><span class="tag tag-active">{{ q.type }}={{ q.value }}</span></td>' +
+    '<td><span class="tag tag-active">{{ typeLabel[q.type]||q.type }}={{ q.value }}</span></td>' +
     '<td><base-badge :color="q.status===\'active\'?\'green\':q.status===\'pending\'?\'amber\':\'red\'">{{ statusName(q.status) }}</base-badge></td>' +
     '<td>{{ q.issued_at || "-" }}</td>' +
     '<td>{{ q.expires_at || "-" }}</td>' +
     '<td style="display:flex;gap:6px;">' +
-    '<button v-if="q.status===\'active\'" class="btn btn-sm" style="background:#fff;color:var(--co-error);border:2px solid var(--co-error);font-weight:600;" @click="revokeQual(q)">收回</button>' +
-    '<button v-if="q.status===\'active\'" class="btn btn-sm" style="background:linear-gradient(135deg,#2D6A4F,#235740);color:#fff;font-weight:600;" @click="renewQual(q)">续期</button>' +
-    '<button v-if="q.status===\'revoked\'||q.status===\'rejected\'" class="btn btn-sm" style="background:linear-gradient(135deg,#2D6A4F,#235740);color:#fff;font-weight:600;" @click="restoreQual(q)">恢复</button>' +
+    '<button v-if="q.status===\'active\'" @click="revokeQual(q)" ' +
+    'style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border:1.5px solid #e0c0c0;border-radius:var(--rd-sm);font-size:0.78rem;font-weight:500;cursor:pointer;background:#fff;color:#B85450;transition:all 0.2s;" ' +
+    'onmouseover="this.style.background=\'#fef5f5\';this.style.borderColor=\'#D14343\';this.style.color=\'#D14343\'" ' +
+    'onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0c0c0\';this.style.color=\'#B85450\'">收回</button>' +
+    '<button v-if="q.status===\'active\'" @click="renewQual(q)" ' +
+    'style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border:none;border-radius:var(--rd-sm);font-size:0.78rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 1px 4px rgba(45,106,79,0.2);transition:all 0.2s;" ' +
+    'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 3px 8px rgba(45,106,79,0.3)\'" ' +
+    'onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 1px 4px rgba(45,106,79,0.2)\'">续期</button>' +
+    '<button v-if="q.status===\'revoked\'||q.status===\'rejected\'" @click="restoreQual(q)" ' +
+    'style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border:none;border-radius:var(--rd-sm);font-size:0.78rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 1px 4px rgba(45,106,79,0.2);transition:all 0.2s;" ' +
+    'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 3px 8px rgba(45,106,79,0.3)\'" ' +
+    'onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 1px 4px rgba(45,106,79,0.2)\'">恢复</button>' +
     '</td></tr></tbody></table></div>' +
     '</div>' +
     /* Result toast area */
@@ -24,7 +33,7 @@ var VueQualManagement = {
     '<i v-else class="fas fa-info-circle" style="color:var(--co-info);"></i>' +
     '{{ msg }}</div>' +
     '</div>',
-  data: function() { return { quals: [], loading: true, msg: '', msgType: 'info' }; },
+  data: function() { return { quals: [], loading: true, msg: '', msgType: 'info', typeLabel:{Location:'产地',Capability:'加工能力',Quality:'品质认证',Grade:'等级',Organic:'有机认证'} }; },
   mounted: function() { this.fetchAll(); },
   methods: {
     statusName: function(s) {
@@ -39,11 +48,11 @@ var VueQualManagement = {
       }).catch(function() { self.loading = false; });
     },
     revokeQual: function(q) {
-      if (!confirm('确定收回「' + q.holder_name + '」的「' + q.type + '=' + q.value + '」资质吗？\n\n⚠️ 此操作将触发ABE属性撤销，该用户将无法再解密相关内容。')) return;
+      if (!confirm('确定收回「' + q.holder_name + '」的「' + (this.typeLabel[q.type]||q.type) + '=' + q.value + '」资质吗？\n\n⚠️ 此操作将触发ABE属性撤销，该用户将无法再解密相关内容。')) return;
       var self = this;
       API.revokeQualification(q.id).then(function(r) {
         self.fetchAll();
-        var msg = (r && r.message) ? r.message : ('已收回：' + q.type + '=' + q.value);
+        var msg = (r && r.message) ? r.message : ('已收回：' + (this.typeLabel[q.type]||q.type) + '=' + q.value);
         self.showMsg(msg, 'info');
       }).catch(function() { self.showMsg('操作失败', 'error'); });
     },
@@ -57,11 +66,11 @@ var VueQualManagement = {
       }).catch(function() { self.showMsg('操作失败', 'error'); });
     },
     restoreQual: function(q) {
-      if (!confirm('确定恢复「' + q.holder_name + '」的「' + q.type + '=' + q.value + '」资质吗？')) return;
+      if (!confirm('确定恢复「' + q.holder_name + '」的「' + (this.typeLabel[q.type]||q.type) + '=' + q.value + '」资质吗？')) return;
       var self = this;
       API.restoreQualification(q.id).then(function() {
         self.fetchAll();
-        self.showMsg('已恢复：' + q.type + '=' + q.value, 'success');
+        self.showMsg('已恢复：' + (this.typeLabel[q.type]||q.type) + '=' + q.value, 'success');
       }).catch(function() { self.showMsg('操作失败', 'error'); });
     },
     showMsg: function(m, t) {

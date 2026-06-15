@@ -23,15 +23,15 @@ const VueDashboard = {
     '<div class="grid-2" style="margin-top:var(--sp-6);">' +
     '<div class="card">' +
     '<div class="card-header"><i class="fas fa-clock card-icon" style="background:var(--co-primary-50);color:var(--co-primary-500);"></i><span class="card-title">待办事项</span></div>' +
-    '<p v-if="matchedDemands > 0" style="margin-bottom:4px;">📦 <a href="#" @click.prevent="goTo(\'demand-market\')">{{ matchedDemands }} 条匹配需求</a></p>' +
+    '<a v-if="matchedDemands > 0" href="#" @click.prevent="goTo(\'demand-market\')" style="display:block;padding:8px 12px;margin-bottom:6px;border-radius:var(--rd-sm);color:var(--co-primary-600);font-weight:600;font-size:0.85rem;text-decoration:none;background:var(--co-primary-50);transition:all 0.2s;" onmouseover="this.style.background=\'var(--co-primary-100)\';this.style.transform=\'translateX(3px)\'" onmouseout="this.style.background=\'var(--co-primary-50)\';this.style.transform=\'none\'">📦 {{ matchedDemands }} 条匹配需求 →</a>' +
     '<p v-if="expiringQuals > 0" style="color:var(--co-warning);margin-bottom:4px;">⚠️ {{ expiringQuals }} 项资质即将到期</p>' +
     '<p v-if="matchedDemands === 0 && expiringQuals === 0" style="color:var(--co-neutral-500);">暂无待办</p>' +
     '</div>' +
     '<div class="card">' +
     '<div class="card-header"><i class="fas fa-chart-line card-icon" style="background:#e0f2fe;color:var(--co-info);"></i><span class="card-title">快捷操作</span></div>' +
-    '<base-button variant="secondary" size="sm" @click="goTo(\'product-list\')" style="margin-right:8px;"><i class="fas fa-boxes"></i> 商品管理</base-button>' +
-    '<base-button variant="secondary" size="sm" @click="goTo(\'demand-market\')" style="margin-right:8px;"><i class="fas fa-bullseye"></i> 需求市场</base-button>' +
-    '<base-button variant="secondary" size="sm" @click="goTo(\'qualifications\')"><i class="fas fa-id-card"></i> 我的资质</base-button>' +
+    '<button @click="goTo(\'product-list\')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;margin:3px 6px 3px 0;border:none;border-radius:var(--rd-sm);font-size:0.82rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 2px 6px rgba(45,106,79,0.2);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 3px 10px rgba(45,106,79,0.3)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 6px rgba(45,106,79,0.2)\'"><i class="fas fa-boxes"></i> 商品管理</button>' +
+    '<button @click="goTo(\'demand-market\')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;margin:3px 6px 3px 0;border:none;border-radius:var(--rd-sm);font-size:0.82rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#3A7CA5,#4A90B8);color:#fff;box-shadow:0 2px 6px rgba(58,124,165,0.2);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 3px 10px rgba(58,124,165,0.3)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 6px rgba(58,124,165,0.2)\'"><i class="fas fa-bullseye"></i> 需求市场</button>' +
+    '<button @click="goTo(\'qualifications\')" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;margin:3px 0;border:none;border-radius:var(--rd-sm);font-size:0.82rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#D97706,#E8964A);color:#fff;box-shadow:0 2px 6px rgba(217,119,6,0.2);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 3px 10px rgba(217,119,6,0.3)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 6px rgba(217,119,6,0.2)\'"><i class="fas fa-id-card"></i> 我的资质</button>' +
     '</div></div></div>' +
     '</div>',
   data: function() {
@@ -58,7 +58,8 @@ const VueDashboard = {
       self.productCount = prods.length;
       self.matchedDemands = dems.filter(function(d) { return d.matched; }).length;
       self.activeQuals = quals.filter(function(q) { return q.status === 'active'; }).length;
-      self.expiringQuals = quals.filter(function(q) { return q.status === 'active' && q.ExpiresAt && q.ExpiresAt <= '2026-09-01'; }).length;
+      var now = new Date(); now.setMonth(now.getMonth()+1); var threshold = now.toISOString().substring(0,10);
+      self.expiringQuals = quals.filter(function(q) { return q.status === 'active' && q.expires_at && q.expires_at <= threshold; }).length;
       self.loading = false;
     }).catch(function() {
       self.loading = false;

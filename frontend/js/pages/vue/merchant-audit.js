@@ -8,7 +8,7 @@ var VueMerchantAudit = {
     '<td><strong>{{ m.name }}</strong></td><td>{{ m.location||"-" }}</td>' +
     '<td>{{ m.active }}/{{ m.total }} 项</td>' +
     '<td><base-badge :color="m.active>=2?\'green\':m.active>=1?\'amber\':\'red\'">{{ m.active>=2?"✅ 合规":m.active>=1?"⚠️ 待完善":"❌ 不合规" }}</base-badge></td>' +
-    '<td><button class="btn btn-sm" style="background:var(--co-error);color:#fff;font-weight:600;border:none;cursor:pointer;" @click="checkMerchant(m)"><i class="fas fa-search"></i> 检查</button></td>' +
+    '<td><button @click="checkMerchant(m)" style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border:none;border-radius:var(--rd-sm);font-size:0.78rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#C53030,#D14343);color:#fff;box-shadow:0 1px 4px rgba(197,48,48,0.2);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 3px 8px rgba(197,48,48,0.3)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 1px 4px rgba(197,48,48,0.2)\'"><i class="fas fa-search"></i> 检查</button></td>' +
     '</tr></tbody></table></div>' +
     /* Detail Modal */
     '<div v-if="detail" class="modal-overlay" @click.self="detail=null"><div class="modal-content" style="max-width:520px;">' +
@@ -24,7 +24,7 @@ var VueMerchantAudit = {
     '<div><strong>{{ q.type }}={{ q.value }}</strong><br><small style="color:var(--co-neutral-500);">颁发方: {{ q.certifier_name||"-" }} · 到期: {{ q.expires_at||"-" }}</small></div>' +
     '<base-badge :color="q.status===\'active\'?\'green\':\'red\'">{{ q.status==="active"?"有效":"失效" }}</base-badge></div></div>' +
     '<base-empty v-else icon="fa-id-card" title="暂无资质" />' +
-    '<button class="btn" style="width:100%;justify-content:center;background:var(--co-neutral-100);color:var(--co-neutral-600);border:none;margin-top:12px;" @click="detail=null">关闭</button>' +
+    '<button @click="detail=null" style="width:100%;justify-content:center;padding:10px 20px;border:1px solid var(--co-neutral-300);border-radius:var(--rd-md);font-size:0.88rem;font-weight:500;cursor:pointer;margin-top:12px;background:#fff;color:var(--co-neutral-600);transition:all 0.2s;" onmouseover="this.style.background=\'var(--co-neutral-50)\';this.style.borderColor=\'var(--co-neutral-400)\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'var(--co-neutral-300)\'">关闭</button>' +
     '</div></div></div></div>',
   data: function() { return { merchants:[], loading:true, detail:null }; },
   mounted: function() { this.load(); },

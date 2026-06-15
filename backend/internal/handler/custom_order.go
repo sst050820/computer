@@ -18,6 +18,8 @@ func HandleCreateCustomOrder(c *gin.Context) {
 		Budget      string            `json:"budget"`
 		Conditions  map[string]string `json:"conditions"`
 		ConsumerID  string            `json:"consumer_id"`
+		Contact     string            `json:"contact"`
+		Address     string            `json:"address"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": "参数错误"})
@@ -27,7 +29,16 @@ func HandleCreateCustomOrder(c *gin.Context) {
 	policy := service.ConditionToPolicy(req.Conditions)
 	allOrders, _ := repository.GetAllCustomOrders()
 	orderID := fmt.Sprintf("CO%03d", len(allOrders)+1)
-	sessionID, ciphertext, _ := service.EncryptWithABE(req.Description + " | 预算:" + req.Budget)
+	encryptContent := req.Description + " | 预算:" + req.Budget
+	if req.Contact != "" {
+		encryptContent += " | 联系方式:" + req.Contact
+	}
+	if req.Address != "" {
+		encryptContent += " | 快递地址:" + req.Address
+	}
+	condCount := len(req.Conditions)
+	if condCount == 0 { condCount = 1 }
+	sessionID, ciphertext, _ := service.EncryptWithABE(encryptContent, condCount)
 
 	if model.FabricReady {
 		service.SubmitToFabric(orderID, ciphertext, req.Conditions["Location"])
@@ -43,6 +54,7 @@ func HandleCreateCustomOrder(c *gin.Context) {
 		Budget: req.Budget, Conditions: req.Conditions, Policy: policy,
 		SessionID: sessionID, Ciphertext: ciphertext,
 		ConsumerID: req.ConsumerID, ConsumerName: consumerName,
+		Contact: req.Contact, Address: req.Address,
 		Status: "active", CreatedAt: time.Now().Format("2006-01-02 15:04"),
 		Responses: make([]model.OrderResponse, 0),
 	}
@@ -95,6 +107,13 @@ func HandleRespondToOrder(c *gin.Context) {
 		c.JSON(404, gin.H{"error": "需求不存在"})
 		return
 	}
+		// Check duplicate: same merchant cannot respond twice
+		for _, r := range o.Responses {
+			if r.MerchantID == resp.MerchantID {
+				c.JSON(409, gin.H{"error": "重复接单"})
+				return
+			}
+		}
 	resp.ID = fmt.Sprintf("R%03d", len(o.Responses)+1)
 	resp.CreatedAt = time.Now().Format("2006-01-02 15:04")
 
@@ -112,6 +131,21 @@ func HandleDeleteCustomOrder(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"status": "success", "message": "需求已删除"})
+}
+
+// HandleUpdateCustomOrderStatus 更新定制需求状态（消费者接受报价后标记为已接受）
+func HandleUpdateCustomOrderStatus(c *gin.Context) {
+	id := c.Param("id")
+	var req struct{ Status string `json:"status"` }
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "参数错误"})
+		return
+	}
+	if err := repository.UpdateCustomOrderStatus(id, req.Status); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "message": "状态已更新"})
 }
 
 func HandleGetPublicOrders(c *gin.Context) {
@@ -162,6 +196,8 @@ func HandleDecryptCustomOrder(c *gin.Context) {
 				"method":      "attribute_match",
 				"description": order.Description,
 				"budget":      order.Budget,
+				"contact":     order.Contact,
+				"address":     order.Address,
 			})
 			return
 		}
@@ -184,5 +220,7 @@ func HandleDecryptCustomOrder(c *gin.Context) {
 		"method":      "abe_decrypt",
 		"description": order.Description,
 		"budget":      order.Budget,
+		"contact":     order.Contact,
+		"address":     order.Address,
 	})
 }

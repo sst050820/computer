@@ -117,6 +117,12 @@ func GetProducts(keyword, category, origin string) ([]model.Product, error) {
 	return prods, nil
 }
 
+func UpdateProduct(id string, p *model.Product) error {
+	_, err := DB.Exec("UPDATE products SET name=?, category=?, origin=?, price=?, certification=? WHERE id=?",
+		p.Name, p.Category, p.Origin, p.Price, p.Certification, id)
+	return err
+}
+
 func DeleteProduct(id string) error {
 	_, err := DB.Exec("DELETE FROM products WHERE id=?", id)
 	return err
@@ -165,15 +171,15 @@ func SearchProducts(keyword string) ([]model.Product, error) {
 
 func CreateCustomOrder(o *model.CustomOrder) error {
 	_, err := DB.Exec(
-		"INSERT INTO custom_orders (id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, status) VALUES (?,?,?,?,?,?,?,?,?,?)",
-		o.ID, o.Title, o.Description, o.Budget, o.Policy, o.SessionID, o.Ciphertext, o.ConsumerID, o.ConsumerName, o.Status,
+		"INSERT INTO custom_orders (id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, contact, address, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+		o.ID, o.Title, o.Description, o.Budget, o.Policy, o.SessionID, o.Ciphertext, o.ConsumerID, o.ConsumerName, o.Contact, o.Address, o.Status,
 	)
 	return err
 }
 
 func GetCustomOrdersByConsumer(consumerID string) ([]*model.CustomOrder, error) {
 	rows, err := DB.Query(
-		"SELECT id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, status, created_at FROM custom_orders WHERE consumer_id=? ORDER BY created_at DESC",
+		"SELECT id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, contact, address, status, created_at FROM custom_orders WHERE consumer_id=? ORDER BY created_at DESC",
 		consumerID,
 	)
 	if err != nil {
@@ -183,7 +189,7 @@ func GetCustomOrdersByConsumer(consumerID string) ([]*model.CustomOrder, error) 
 	var orders []*model.CustomOrder
 	for rows.Next() {
 		o := &model.CustomOrder{}
-		if err := rows.Scan(&o.ID, &o.Title, &o.Description, &o.Budget, &o.Policy, &o.SessionID, &o.Ciphertext, &o.ConsumerID, &o.ConsumerName, &o.Status, &o.CreatedAt); err != nil {
+		if err := rows.Scan(&o.ID, &o.Title, &o.Description, &o.Budget, &o.Policy, &o.SessionID, &o.Ciphertext, &o.ConsumerID, &o.ConsumerName, &o.Contact, &o.Address, &o.Status, &o.CreatedAt); err != nil {
 			return nil, err
 		}
 		// Load responses
@@ -214,9 +220,9 @@ func GetCustomOrdersByConsumer(consumerID string) ([]*model.CustomOrder, error) 
 func GetCustomOrderByID(id string) (*model.CustomOrder, error) {
 	o := &model.CustomOrder{}
 	err := DB.QueryRow(
-		"SELECT id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, status, created_at FROM custom_orders WHERE id=?",
+		"SELECT id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, contact, address, status, created_at FROM custom_orders WHERE id=?",
 		id,
-	).Scan(&o.ID, &o.Title, &o.Description, &o.Budget, &o.Policy, &o.SessionID, &o.Ciphertext, &o.ConsumerID, &o.ConsumerName, &o.Status, &o.CreatedAt)
+	).Scan(&o.ID, &o.Title, &o.Description, &o.Budget, &o.Policy, &o.SessionID, &o.Ciphertext, &o.ConsumerID, &o.ConsumerName, &o.Contact, &o.Address, &o.Status, &o.CreatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -238,6 +244,11 @@ func GetCustomOrderByID(id string) (*model.CustomOrder, error) {
 		o.Responses = []model.OrderResponse{}
 	}
 	return o, nil
+}
+
+func UpdateCustomOrderStatus(id, status string) error {
+	_, err := DB.Exec("UPDATE custom_orders SET status=? WHERE id=?", status, id)
+	return err
 }
 
 func DeleteCustomOrder(id string) error {
@@ -265,7 +276,7 @@ func GetPublicOrders() ([]*model.CustomOrder, error) {
 }
 
 func GetAllCustomOrders() ([]*model.CustomOrder, error) {
-	rows, err := DB.Query("SELECT id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, status, created_at FROM custom_orders ORDER BY created_at DESC")
+	rows, err := DB.Query("SELECT id, title, description, budget, policy, session_id, ciphertext, consumer_id, consumer_name, contact, address, status, created_at FROM custom_orders ORDER BY created_at DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +284,7 @@ func GetAllCustomOrders() ([]*model.CustomOrder, error) {
 	var orders []*model.CustomOrder
 	for rows.Next() {
 		o := &model.CustomOrder{}
-		if err := rows.Scan(&o.ID, &o.Title, &o.Description, &o.Budget, &o.Policy, &o.SessionID, &o.Ciphertext, &o.ConsumerID, &o.ConsumerName, &o.Status, &o.CreatedAt); err != nil {
+		if err := rows.Scan(&o.ID, &o.Title, &o.Description, &o.Budget, &o.Policy, &o.SessionID, &o.Ciphertext, &o.ConsumerID, &o.ConsumerName, &o.Contact, &o.Address, &o.Status, &o.CreatedAt); err != nil {
 			return nil, err
 		}
 		o.Responses = []model.OrderResponse{}
@@ -507,7 +518,7 @@ func SeedDemoData() {
 	// Demo users (skip if exist)
 	if userCount == 0 {
 		users := []model.User{
-		{ID: "u1", Username: "zhangguonong", Password: "123456", Name: "张果农", Role: "consumer", Location: "福建"},
+		{ID: "u1", Username: "shike", Password: "123456", Name: "陈食客", Role: "consumer", Location: "福建"},
 		{ID: "u2", Username: "fujianmingpin", Password: "123456", Name: "福建名品茶厂", Role: "merchant", Location: "福建"},
 		{ID: "u3", Username: "shandongfengshou", Password: "123456", Name: "山东丰收食品厂", Role: "merchant", Location: "山东"},
 		{ID: "u4", Username: "zhejianglongjing", Password: "123456", Name: "浙江龙井茶园", Role: "merchant", Location: "浙江"},
@@ -526,11 +537,11 @@ func SeedDemoData() {
 	if qualCount == 0 {
 	quals := []model.Qualification{
 		{ID: "q1", HolderID: "u2", HolderName: "福建名品茶厂", Type: "Location", Value: "福建", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-01-01"},
-		{ID: "q2", HolderID: "u2", HolderName: "福建名品茶厂", Type: "Capability", Value: "制茶", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-01-01"},
-		{ID: "q3", HolderID: "u2", HolderName: "福建名品茶厂", Type: "Grade", Value: "3", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2026-08-01"},
+		{ID: "q2", HolderID: "u2", HolderName: "福建名品茶厂", Type: "Capability", Value: "制茶", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-01-01"},
+		{ID: "q3", HolderID: "u2", HolderName: "福建名品茶厂", Type: "Grade", Value: "3", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2026-08-01"},
 		{ID: "q4", HolderID: "u3", HolderName: "山东丰收食品厂", Type: "Location", Value: "山东", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-01-01"},
 		{ID: "q5", HolderID: "u3", HolderName: "山东丰收食品厂", Type: "Quality", Value: "有机", Status: "pending"},
-		{ID: "q6", HolderID: "u4", HolderName: "浙江龙井茶园", Type: "Location", Value: "浙江", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-01-01"},
+		{ID: "q6", HolderID: "u4", HolderName: "浙江龙井茶园", Type: "Location", Value: "浙江", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-01-01"},
 		{ID: "q7", HolderID: "u4", HolderName: "浙江龙井茶园", Type: "Quality", Value: "有机", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2026-09-01"},
 	}
 	for i := range quals {

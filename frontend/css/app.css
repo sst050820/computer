@@ -332,27 +332,42 @@ a:hover { color: var(--co-primary-600); }
   padding: 9px 20px; border-radius: var(--rd-md);
   font-size: var(--fs-sm); font-weight: var(--fw-semibold);
   font-family: inherit; cursor: pointer; border: none;
-  transition: all var(--tr-fast); line-height: 1;
+  transition: all 0.2s; line-height: 1;
   white-space: nowrap; text-decoration: none;
 }
 .btn:active { transform: scale(0.97); }
+.btn:hover { transform: translateY(-1px); }
 
-.btn-primary { background: var(--co-primary-500); color: #fff; box-shadow: var(--sh-sm); }
-.btn-primary:hover { background: var(--co-primary-600); box-shadow: var(--sh-md); }
+.btn-primary {
+  background: linear-gradient(135deg, #2D6A4F, #40916C); color: #fff;
+  box-shadow: 0 2px 8px rgba(45,106,79,0.25);
+}
+.btn-primary:hover { box-shadow: 0 4px 14px rgba(45,106,79,0.35); }
 
-.btn-secondary { background: var(--co-primary-50); color: var(--co-primary-600); }
-.btn-secondary:hover { background: var(--co-primary-100); }
+.btn-secondary {
+  background: var(--co-primary-50); color: var(--co-primary-600);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.btn-secondary:hover { background: var(--co-primary-100); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
 
 .btn-outline {
-  background: transparent; color: var(--co-neutral-600);
+  background: #fff; color: var(--co-neutral-600);
   border: 1px solid var(--co-neutral-300);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
-.btn-outline:hover { border-color: var(--co-primary-400); color: var(--co-primary-500); background: var(--co-primary-50); }
+.btn-outline:hover { border-color: var(--co-neutral-400); color: var(--co-neutral-800); background: var(--co-neutral-50); box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
 
-.btn-danger { background: var(--co-error); color: #fff; }
-.btn-danger:hover { background: #b91c1c; }
-.btn-danger-ghost { background: none; color: var(--co-error); }
-.btn-danger-ghost:hover { background: #fef2f2; }
+.btn-danger {
+  background: linear-gradient(135deg, #C53030, #D14343); color: #fff;
+  box-shadow: 0 2px 8px rgba(197,48,48,0.25);
+}
+.btn-danger:hover { box-shadow: 0 4px 14px rgba(197,48,48,0.35); }
+
+.btn-danger-ghost {
+  background: #fff; color: #B85450; border: 1.5px solid #e0c0c0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.btn-danger-ghost:hover { background: #fef5f5; border-color: #D14343; color: #D14343; box-shadow: 0 3px 8px rgba(197,48,48,0.12); }
 
 .btn-ghost { background: none; color: var(--co-neutral-600); }
 .btn-ghost:hover { background: var(--co-neutral-100); color: var(--co-neutral-800); }
@@ -360,7 +375,7 @@ a:hover { color: var(--co-primary-600); }
 .btn-sm { padding: 5px 12px; font-size: var(--fs-xs); border-radius: var(--rd-sm); }
 .btn-lg { padding: 12px 28px; font-size: var(--fs-base); border-radius: var(--rd-lg); }
 .btn-block { width: 100%; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; transform: none; }
 
 /* ----- Form Elements ----- */
 .form-group { margin-bottom: var(--sp-4); }
@@ -480,19 +495,20 @@ a:hover { color: var(--co-primary-600); }
   width: 100%;
   display: flex; align-items: center; justify-content: center; gap: 6px;
   padding: 10px 0;
-  border: 2px solid var(--co-primary-400);
+  border: none;
   border-radius: var(--rd-md);
-  background: var(--co-primary-50);
-  color: var(--co-primary-600);
+  background: linear-gradient(135deg, #2D6A4F, #40916C);
+  color: #fff;
   font-size: var(--fs-sm); font-weight: var(--fw-semibold);
   font-family: inherit; cursor: pointer;
-  transition: all var(--tr-fast);
+  box-shadow: 0 2px 6px rgba(45,106,79,0.2);
+  transition: all 0.2s;
 }
 .product-card .prod-cart-btn:hover {
-  background: var(--co-primary-500);
-  border-color: var(--co-primary-500);
+  background: linear-gradient(135deg, #235740, #2D6A4F);
+  box-shadow: 0 4px 12px rgba(45,106,79,0.3);
+  transform: translateY(-1px);
   color: #fff;
-  box-shadow: var(--sh-md);
 }
 
 /* ----- Stat Cards (Dashboard) ----- */
@@ -766,9 +782,19 @@ a:hover { color: var(--co-primary-600); }
   font-size: var(--fs-sm); font-weight: var(--fw-semibold);
   font-family: inherit; cursor: pointer; border: none;
   background: var(--co-primary-500); color: #fff;
-  transition: all var(--tr-fast);
+  transition: all 0.2s;
 }
-#legacy-page-container .btn:hover { background: var(--co-primary-600); }
+#legacy-page-container .btn:hover { transform: translateY(-1px); }
+#legacy-page-container .btn-primary { background: linear-gradient(135deg, #2D6A4F, #40916C); color: #fff; box-shadow: 0 2px 8px rgba(45,106,79,0.25); }
+#legacy-page-container .btn-primary:hover { box-shadow: 0 4px 14px rgba(45,106,79,0.35); }
+#legacy-page-container .btn-danger { background: linear-gradient(135deg, #C53030, #D14343); color: #fff; box-shadow: 0 2px 8px rgba(197,48,48,0.25); }
+#legacy-page-container .btn-danger:hover { box-shadow: 0 4px 14px rgba(197,48,48,0.35); }
+#legacy-page-container .btn-danger-ghost { background: #fff; color: #B85450; border: 1.5px solid #e0c0c0; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+#legacy-page-container .btn-danger-ghost:hover { background: #fef5f5; border-color: #D14343; color: #D14343; box-shadow: 0 3px 8px rgba(197,48,48,0.12); }
+#legacy-page-container .btn-outline { background: #fff; color: var(--co-neutral-600); border: 1px solid var(--co-neutral-300); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+#legacy-page-container .btn-outline:hover { border-color: var(--co-neutral-400); color: var(--co-neutral-800); background: var(--co-neutral-50); box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+#legacy-page-container .btn-sm { padding: 5px 12px; font-size: var(--fs-xs); }
+#legacy-page-container .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; transform: none; }
 #legacy-page-container .btn-outline { background: transparent; border: 1px solid var(--co-neutral-300); color: var(--co-neutral-600); }
 #legacy-page-container .btn-outline:hover { border-color: var(--co-primary-400); color: var(--co-primary-500); background: var(--co-primary-50); }
 #legacy-page-container .btn-sm { padding: 5px 12px; font-size: var(--fs-xs); }

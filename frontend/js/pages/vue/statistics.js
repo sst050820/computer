@@ -16,7 +16,7 @@ var VueStatistics = {
   methods: {
     loadAll: function() {
       var self = this;
-      Promise.all([API.getAllUsers(), API._fetch('/api/products'), API.getAllQualifications(), API._fetch('/api/admin/orders'), API._fetch('/api/merchant/orders?merchant_id=')]).then(function(results) {
+      Promise.all([API.getAllUsers(), API._fetch('/api/products'), API.getAllQualifications(), API._fetch('/api/admin/orders'), API._fetch('/api/admin/purchase-orders')]).then(function(results) {
         var users = (results[0]&&results[0].data)||[], prods = (results[1]&&results[1].data)||[], quals = (results[2]&&results[2].data)||[];
         var customs = (results[3]&&results[3].data)||[], orders = (results[4]&&results[4].data)||[];
         self.s.users=users.length; self.s.products=prods.length; self.s.quals=quals.length; self.s.customs=customs.length; self.s.orders=orders.length;

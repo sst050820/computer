@@ -4,11 +4,11 @@ var VueReviewHistory = {
     '<base-loading v-if="loading" />' +
     '<base-empty v-else-if="history.length===0" icon="fa-history" title="暂无审核记录" />' +
     '<div v-else><table class="data-table"><thead><tr><th>申请人</th><th>资质</th><th>结果</th><th>审核方</th><th>日期</th></tr></thead><tbody>' +
-    '<tr v-for="h in history" :key="h.id"><td>{{ h.holder_name }}</td><td>{{ h.type }}={{ h.value }}</td>' +
+    '<tr v-for="h in history" :key="h.id"><td>{{ h.holder_name }}</td><td>{{ typeLabel[h.type]||h.type }}={{ h.value }}</td>' +
     '<td><base-badge :color="h.status===\'active\'?\'green\':h.status===\'pending\'?\'amber\':\'red\'">{{ statusLabel(h.status) }}</base-badge></td>' +
     '<td>{{ h.certifier_name || "-" }}</td><td>{{ h.issued_at || h.expires_at || "-" }}</td></tr>' +
     '</tbody></table></div></div>',
-  data: function() { return { history: [], loading: true }; },
+  data: function() { return { history: [], loading: true, typeLabel:{Location:'产地',Capability:'加工能力',Quality:'品质认证',Grade:'等级',Organic:'有机认证'} }; },
   computed: { total: function() { return this.history.length; } },
   mounted: function() { this.load(); },
   methods: {

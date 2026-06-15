@@ -4,7 +4,7 @@ var VueProductSpot = {
     '<div class="card"><div class="card-header"><i class="fas fa-check-circle card-icon" style="background:#fee2e2;color:var(--co-error);"></i><span class="card-title">商品抽检合规仪表盘</span></div>' +
     '<p style="color:var(--co-neutral-500);margin-bottom:16px;font-size:0.85rem;">随机抽检商品追溯信息完整性，快速发现档案缺失问题</p>' +
     '<div style="display:flex;gap:10px;margin-bottom:16px;">' +
-    '<button class="btn" style="padding:12px 24px;background:linear-gradient(135deg,var(--co-error),#b91c1c);color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(209,67,67,0.3);border:none;cursor:pointer;" @click="doSpot" :disabled="loading"><i v-if="loading" class="fas fa-spinner fa-spin"></i><i v-else class="fas fa-random"></i> 开始抽检</button>' +
+    '<button @click="doSpot" :disabled="loading" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:none;border-radius:var(--rd-md);font-size:0.9rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#C53030,#D14343);color:#fff;box-shadow:0 4px 16px rgba(197,48,48,0.3);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 6px 22px rgba(197,48,48,0.4)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 4px 16px rgba(197,48,48,0.3)\'"><i v-if="loading" class="fas fa-spinner fa-spin"></i><i v-else class="fas fa-random"></i> 开始抽检</button>' +
     '<span style="font-size:0.8rem;color:var(--co-neutral-500);align-self:center;">共 {{ samples.length }} 件商品 · 每次随机抽取 5 件</span></div>' +
     '<div v-if="results.length">' +
     /* Stats */

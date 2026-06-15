@@ -14,10 +14,17 @@ var VueUserManagement = {
     '<td><base-badge :color="roleColor(u.role)">{{ roleNames[u.role]||u.role }}</base-badge></td>' +
     '<td>{{ u.location||"--" }}</td>' +
     '<td >' +
-    '<button class="btn btn-sm" style="background:var(--co-primary-50);color:var(--co-primary-600);font-weight:600;margin-right:4px;border:none;cursor:pointer;" @click="viewUser(u)"><i class="fas fa-eye"></i></button>' +
-    '<button class="btn btn-sm" :style="(u.status===\'disabled\'?{background:\'var(--co-success)\',color:\'#fff\'}:{background:\'#fff\',color:\'var(--co-error)\',border:\'2px solid var(--co-error)\'})" @click="toggleUser(u)" style="font-weight:600;cursor:pointer;">' +
-    '{{ u.status==="disabled"?"启用":"禁用" }}</button>' +
-    '<button v-if="u.role===\'consumer\'||u.role===\'merchant\'" class="btn btn-sm" style="background:#fff;color:var(--co-error);border:2px solid var(--co-error);font-weight:600;margin-left:4px;cursor:pointer;" @click="delUser(u)"><i class="fas fa-trash"></i></button></td>' +
+    '<button @click="viewUser(u)" style="display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border:none;border-radius:var(--rd-sm);font-size:0.78rem;font-weight:600;cursor:pointer;margin-right:4px;background:#e8f0fe;color:var(--co-info);transition:all 0.2s;" onmouseover="this.style.background=\'#d0e4f8\'" onmouseout="this.style.background=\'#e8f0fe\'"><i class="fas fa-eye"></i></button>' +
+    '<button @click="toggleUser(u)" ' +
+    'style="display:inline-flex;align-items:center;gap:3px;padding:5px 12px;border:none;border-radius:var(--rd-sm);font-size:0.78rem;font-weight:600;cursor:pointer;margin-right:4px;transition:all 0.2s;" ' +
+    ':style="u.status===\'disabled\'?{background:\'linear-gradient(135deg,#2D6A4F,#40916C)\',color:\'#fff\',boxShadow:\'0 1px 4px rgba(45,106,79,0.2)\'}:{background:\'#fff\',color:\'#B85450\',border:\'1.5px solid #e0c0c0\'}" ' +
+    'onmouseover="if(this.innerText.trim()===\'启用\'){this.style.boxShadow=\'0 3px 8px rgba(45,106,79,0.3)\'}else{this.style.background=\'#fef5f5\';this.style.borderColor=\'#D14343\';this.style.color=\'#D14343\'}" ' +
+    'onmouseout="if(this.innerText.trim()===\'启用\'){this.style.boxShadow=\'0 1px 4px rgba(45,106,79,0.2)\'}else{this.style.background=\'#fff\';this.style.borderColor=\'#e0c0c0\';this.style.color=\'#B85450\'}" ' +
+    '>{{ u.status==="disabled"?"启用":"禁用" }}</button>' +
+    '<button v-if="u.role===\'consumer\'||u.role===\'merchant\'" @click="delUser(u)" ' +
+    'style="display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border:1.5px solid #e0c0c0;border-radius:var(--rd-sm);font-size:0.78rem;font-weight:500;cursor:pointer;margin-left:4px;background:#fff;color:#B85450;transition:all 0.2s;" ' +
+    'onmouseover="this.style.background=\'#fef5f5\';this.style.borderColor=\'#D14343\';this.style.color=\'#D14343\'" ' +
+    'onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0c0c0\';this.style.color=\'#B85450\'"><i class="fas fa-trash"></i></button></td>' +
     '</tr></tbody></table></div></div>' +
     /* Detail modal */
     '<div v-if="detail" class="modal-overlay" @click.self="detail=null">' +
@@ -34,8 +41,13 @@ var VueUserManagement = {
     '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--co-neutral-100);"><span style="color:var(--co-neutral-500);">所在地</span><strong>{{ detail.location||"-" }}</strong></div>' +
     '<div style="display:flex;justify-content:space-between;padding:8px 0;"><span style="color:var(--co-neutral-500);">手机号</span><strong>{{ detail.phone||"-" }}</strong></div></div>' +
     '<div style="margin-top:16px;display:flex;gap:8px;">' +
-    '<button class="btn" :style="(detail.status===\'disabled\'?{background:\'var(--co-success)\',color:\'#fff\'}:{background:\'#fff\',color:\'var(--co-error)\',border:\'2px solid var(--co-error)\'})" @click="toggleUser(detail); detail=null" style="flex:1;justify-content:center;font-weight:600;">{{ detail.status==="disabled"?"启用该用户":"禁用该用户" }}</button>' +
-    '<button class="btn" style="flex:1;justify-content:center;background:var(--co-neutral-100);color:var(--co-neutral-600);border:none;" @click="detail=null">关闭</button></div>' +
+    '<button @click="toggleUser(detail); detail=null" ' +
+    'style="display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center;padding:10px 20px;border:none;border-radius:var(--rd-md);font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;" ' +
+    ':style="detail.status===\'disabled\'?{background:\'linear-gradient(135deg,#2D6A4F,#40916C)\',color:\'#fff\',boxShadow:\'0 2px 8px rgba(45,106,79,0.25)\'}:{background:\'#fff\',color:\'#B85450\',border:\'1.5px solid #e0c0c0\'}" ' +
+    'onmouseover="if(this.innerText.indexOf(\'启用\')>=0){this.style.boxShadow=\'0 4px 14px rgba(45,106,79,0.35)\'}else{this.style.background=\'#fef5f5\';this.style.borderColor=\'#D14343\';this.style.color=\'#D14343\'}" ' +
+    'onmouseout="if(this.innerText.indexOf(\'启用\')>=0){this.style.boxShadow=\'0 2px 8px rgba(45,106,79,0.25)\'}else{this.style.background=\'#fff\';this.style.borderColor=\'#e0c0c0\';this.style.color=\'#B85450\'}" ' +
+    '>{{ detail.status==="disabled"?"启用该用户":"禁用该用户" }}</button>' +
+    '<button @click="detail=null" style="display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center;padding:10px 20px;border:1px solid var(--co-neutral-300);border-radius:var(--rd-md);font-size:0.88rem;font-weight:500;cursor:pointer;background:#fff;color:var(--co-neutral-600);transition:all 0.2s;" onmouseover="this.style.background=\'var(--co-neutral-50)\';this.style.borderColor=\'var(--co-neutral-400)\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'var(--co-neutral-300)\'">关闭</button></div>' +
     '</div></div></div></div>',
   data: function() { return { users:[], loading:true, search:'', detail:null, roleNames:{consumer:'消费者',merchant:'商家',certifier:'审核方',admin:'管理员',regulator:'监管方'} }; },
   computed: { filtered:function(){var s=this.search.toLowerCase();return this.users.filter(function(u){return !s||u.name.toLowerCase().indexOf(s)>=0||u.username.toLowerCase().indexOf(s)>=0;});} },

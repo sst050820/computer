@@ -33,6 +33,7 @@ var VueApp = createApp({
         { key:'custom-order', icon:'fa-magic', label:'私人定制' },
         { key:'order-square', icon:'fa-th-list', label:'定制广场' },
         { key:'my-orders', icon:'fa-clipboard-list', label:'我的需求' },
+        { key:'consumer-orders', icon:'fa-receipt', label:'我的订单' },
         { key:'cart', icon:'fa-shopping-cart', label:'购物车' },
         { key:'messages', icon:'fa-envelope', label:'消息' },
         { key:'profile', icon:'fa-user-circle', label:'个人中心' },
@@ -72,7 +73,7 @@ var VueApp = createApp({
 
     var pageTitles = {
       discovery:{title:'发现好物',sub:'探索源头农产品'}, 'custom-order':{title:'私人定制',sub:'设定条件，定向发布需求'},
-      'order-square':{title:'定制广场',sub:'浏览他人的定制需求'}, 'my-orders':{title:'我的需求',sub:'查看和管理发布的定制'},
+      'order-square':{title:'定制广场',sub:'浏览他人的定制需求'}, 'my-orders':{title:'我的需求',sub:'查看和管理发布的定制'}, 'consumer-orders':{title:'我的订单',sub:'追踪购买的商品订单'},
       cart:{title:'购物车',sub:'待结算商品'}, messages:{title:'消息中心',sub:'系统通知与消息'},
       profile:{title:'个人中心',sub:'账户信息与设置'}, dashboard:{title:'工作台',sub:'经营数据概览'},
       'product-list':{title:'商品管理',sub:'发布和管理商品'}, 'demand-market':{title:'需求市场',sub:'根据资质自动匹配定制需求'},
@@ -94,6 +95,11 @@ var VueApp = createApp({
     var cartCount = computed(function() {
       var c = window.App && window.App.cart ? window.App.cart : [];
       var t = 0; c.forEach(function(i) { t += i.qty || 1; }); return t;
+    });
+    var unreadMsgCount = computed(function() {
+      var uid = (currentUser.value && currentUser.value.id) ? currentUser.value.id : '';
+      if (!uid) return 0;
+      try { var s = localStorage.getItem('fruit_msgs_' + uid); var msgs = s ? JSON.parse(s) : []; var n = 0; msgs.forEach(function(m) { if (m.unread) n++; }); return n; } catch(e) { return 0; }
     });
 
     function showToast(message, type) {
@@ -235,7 +241,7 @@ var VueApp = createApp({
 
     return {
       isLoggedIn, authMode, currentUser, loginForm, loginError, regForm, regError,
-      currentPage, sidebarOpen, globalSearch, menuItems, currentRoleInfo, pageInfo, isLegacyPage, cartCount,
+      currentPage, sidebarOpen, globalSearch, menuItems, currentRoleInfo, pageInfo, isLegacyPage, cartCount, unreadMsgCount,
       toasts, doLogin, doRegister, doLogout, navigateTo, doGlobalSearch, showToast
     };
   }
@@ -251,6 +257,7 @@ if (typeof VueDemandMarket !== 'undefined') VuePages['demand-market'] = VueDeman
 if (typeof VueQualifications !== 'undefined') VuePages['qualifications'] = VueQualifications;
 if (typeof VueProductList !== 'undefined') VuePages['product-list'] = VueProductList;
 if (typeof VueMyOrders !== 'undefined') VuePages['my-orders'] = VueMyOrders;
+if (typeof VueConsumerOrders !== 'undefined') VuePages['consumer-orders'] = VueConsumerOrders;
 if (typeof VueReviewList !== 'undefined') VuePages['review-list'] = VueReviewList;
 if (typeof VueArchiveSearch !== 'undefined') VuePages['archive-search'] = VueArchiveSearch;
 if (typeof VueEmergency !== 'undefined') VuePages['emergency'] = VueEmergency;

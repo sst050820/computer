@@ -9,8 +9,8 @@ var VueDispute = {
     '<p style="font-size:0.8rem;color:var(--co-neutral-500);">争议: {{ d.issue }}</p></div>' +
     '<base-badge :color="d.status===\'pending\'?\'amber\':\'green\'">{{ d.status==="pending"?"待处理":"已裁决" }}</base-badge></div>' +
     '<div style="display:flex;gap:8px;margin-top:10px;" >' +
-    '<button class="btn btn-sm" style="background:var(--co-error);color:#fff;font-weight:600;border:none;cursor:pointer;" @click="resolve(d)"><i class="fas fa-gavel"></i> 裁决</button>' +
-    '<button class="btn btn-sm" style="background:var(--co-primary-500);color:#fff;font-weight:600;border:none;cursor:pointer;" @click="showDetail(d)"><i class="fas fa-search"></i> 详情</button></div></div>' +
+    '<button @click="resolve(d)" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:none;border-radius:var(--rd-sm);font-size:0.82rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#C53030,#D14343);color:#fff;box-shadow:0 2px 6px rgba(197,48,48,0.25);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 12px rgba(197,48,48,0.35)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 6px rgba(197,48,48,0.25)\'"><i class="fas fa-gavel"></i> 裁决</button>' +
+    '<button @click="showDetail(d)" style="display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:none;border-radius:var(--rd-sm);font-size:0.82rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 2px 6px rgba(45,106,79,0.25);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 12px rgba(45,106,79,0.35)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 6px rgba(45,106,79,0.25)\'"><i class="fas fa-search"></i> 详情</button></div></div>' +
     /* Detail Modal */
     '<div v-if="detail" class="modal-overlay" @click.self="detail=null"><div class="modal-content" style="max-width:520px;">' +
     '<div class="modal-header"><h3>纠纷详情 #{{ detail.id }}</h3><button class="modal-close" @click="detail=null"><i class="fas fa-times"></i></button></div>' +
@@ -24,13 +24,18 @@ var VueDispute = {
     '<div class="timeline-step"><h5>加工环节</h5><p>加工车间 · 2026-03-20</p></div>' +
     '<div class="timeline-step"><h5>质检环节</h5><p>检测中心 · 2026-04-01</p></div></div></div>' +
     '<div style="display:flex;gap:8px;">' +
-    '<button class="btn" style="flex:1;justify-content:center;background:var(--co-error);color:#fff;font-weight:600;border:none;cursor:pointer;" @click="resolve(detail);detail=null"><i class="fas fa-gavel"></i> 确认裁决</button>' +
-    '<button class="btn" style="flex:1;justify-content:center;background:var(--co-neutral-100);color:var(--co-neutral-600);border:none;cursor:pointer;" @click="detail=null">关闭</button></div>' +
+    '<button @click="resolve(detail);detail=null" style="display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center;padding:10px 20px;border:none;border-radius:var(--rd-md);font-size:0.88rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#C53030,#D14343);color:#fff;box-shadow:0 2px 8px rgba(197,48,48,0.25);transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 14px rgba(197,48,48,0.35)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 8px rgba(197,48,48,0.25)\'"><i class="fas fa-gavel"></i> 确认裁决</button>' +
+    '<button @click="detail=null" style="display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center;padding:10px 20px;border:1px solid var(--co-neutral-300);border-radius:var(--rd-md);font-size:0.88rem;font-weight:500;cursor:pointer;background:#fff;color:var(--co-neutral-600);transition:all 0.2s;" onmouseover="this.style.background=\'var(--co-neutral-50)\';this.style.borderColor=\'var(--co-neutral-400)\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'var(--co-neutral-300)\'">关闭</button></div>' +
     '</div></div></div>' +
     '<div v-if="msg" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#fff;padding:12px 24px;border-radius:var(--rd-full);box-shadow:var(--sh-lg);z-index:999;font-weight:500;">{{ msg }}</div>' +
     '</div></div>',
-  data: function() { return { detail:null, msg:'', disputes:[{id:'D001',title:'产品质量纠纷',parties:'张果农 vs 山东丰收食品厂',issue:'收到的有机铁观音与描述不符，品质未达到有机标准',status:'pending'},{id:'D002',title:'物流延误投诉',parties:'李茶商 vs 浙江龙井茶园',issue:'下单7天后仍未收到货物，商家未提供有效物流信息',status:'pending'}] }; },
+  data: function() { return { detail:null, msg:'', disputes:[], loading:true }; },
+  mounted: function() { this.load(); },
   methods: {
+    load: function() {
+      var self = this;
+      API._fetch('/api/admin/disputes').then(function(r) { self.disputes = (r&&r.data)||[]; self.loading = false; }).catch(function() { self.loading = false; });
+    },
     flash: function(m){var self=this;this.msg=m;clearTimeout(this._t);this._t=setTimeout(function(){self.msg='';},2000);},
     showDetail: function(d){this.detail=d;},
     resolve: function(d){d.status='resolved';this.flash('✅ 纠纷 #'+d.id+' 已裁决');}

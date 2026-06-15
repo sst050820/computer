@@ -63,6 +63,7 @@ var VueProfile = {
       var role = this.user && this.user.role;
       if (role === 'consumer') return [
         { key:'my-orders', icon:'fa-clipboard-list', label:'我的定制需求' },
+        { key:'consumer-orders', icon:'fa-receipt', label:'我的购买订单' },
         { key:'cart', icon:'fa-shopping-cart', label:'购物车 (' + this.stats.cart + ')' },
         { key:'messages', icon:'fa-envelope', label:'消息中心' },
       ];

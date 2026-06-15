@@ -60,6 +60,7 @@ func Setup() *gin.Engine {
 	r.GET("/api/products/:id", handler.HandleGetProductDetail)
 	r.GET("/api/my-products", handler.HandleGetMyProducts)
 	r.POST("/api/products", handler.HandleCreateProduct)
+	r.PUT("/api/products/:id", handler.HandleUpdateProduct)
 	r.DELETE("/api/products/:id", handler.HandleDeleteProduct)
 
 	// 产品档案
@@ -71,6 +72,7 @@ func Setup() *gin.Engine {
 	r.GET("/api/custom-orders/:id", handler.HandleGetCustomOrderDetail)
 	r.POST("/api/custom-orders/:id/respond", handler.HandleRespondToOrder)
 	r.DELETE("/api/custom-orders/:id", handler.HandleDeleteCustomOrder)
+	r.PUT("/api/custom-orders/:id/status", handler.HandleUpdateCustomOrderStatus)
 	r.POST("/api/custom-orders/:id/decrypt", handler.HandleDecryptCustomOrder)
 	r.GET("/api/public-orders", handler.HandleGetPublicOrders)
 
@@ -79,6 +81,8 @@ func Setup() *gin.Engine {
 	r.GET("/api/merchant/orders", handler.HandleGetMerchantOrders)
 	r.GET("/api/consumer/orders", handler.HandleGetConsumerOrders)
 	r.PUT("/api/orders/:id/status", handler.HandleUpdateOrderStatus)
+	r.DELETE("/api/orders/:id", handler.HandleDeleteOrder)
+	r.GET("/api/admin/purchase-orders", handler.HandleGetAllPurchaseOrders)
 
 	// 需求市场
 	r.GET("/api/demand-market", handler.HandleGetDemandMarket)
@@ -100,6 +104,7 @@ func Setup() *gin.Engine {
 	r.DELETE("/api/admin/users/:id", handler.HandleDeleteUser)
 	r.GET("/api/admin/qualifications", handler.HandleGetAllQualifications)
 	r.GET("/api/admin/orders", handler.HandleGetAllCustomOrders)
+	r.GET("/api/admin/disputes", handler.HandleGetDisputes)
 	r.POST("/api/admin/sys-update", handler.HandleSysUpdate)
 
 	// 监管方

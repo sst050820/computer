@@ -17,6 +17,7 @@ var App = {
       { key: "custom-order", icon: "fa-magic",           label: "私人定制" },
       { key: "order-square", icon: "fa-th-list",         label: "定制广场" },
       { key: "my-orders",    icon: "fa-clipboard-list",  label: "我的需求" },
+      { key: "consumer-orders", icon: "fa-receipt", label: "我的订单" },
       { key: "cart",         icon: "fa-shopping-cart",   label: "购物车" },
       { key: "messages",     icon: "fa-envelope",        label: "消息" },
       { key: "profile",      icon: "fa-user-circle",     label: "个人中心" },

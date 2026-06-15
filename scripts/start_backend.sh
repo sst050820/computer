@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 编译并启动 Go 后端服务（含 MySQL）
+# 编译并启动 Go 后端 + MySQL
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG="$ROOT/logs"
@@ -26,7 +26,5 @@ echo "编译完成"
 fuser -k 8080/tcp 2>/dev/null || true
 
 echo "启动后端服务 (端口 8080)..."
-nohup ./server > "$LOG/backend.log" 2>&1 &
-PID=$!
-echo "后端已启动 PID=$PID"
-echo "前端: http://localhost:8080"
+FRONTEND_ROOT="$ROOT/frontend" nohup ./server > "$LOG/backend.log" 2>&1 &
+echo "✓ 后端已启动: http://localhost:8080"

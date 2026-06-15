@@ -34,11 +34,16 @@ func HandleCreateOrder(c *gin.Context) {
 		req.Quantity = 1
 	}
 
+	merchantName := ""
+	if u, err := repository.GetUserByID(req.MerchantID); err == nil && u != nil {
+		merchantName = u.Name
+	}
 	order := &model.Order{
-		ID:           fmt.Sprintf("ORD%03d", repository.CountOrders()+1),
+		ID:           fmt.Sprintf("ORD%d", time.Now().UnixMilli()),
 		ConsumerID:   req.ConsumerID,
 		ConsumerName: req.ConsumerName,
 		MerchantID:   req.MerchantID,
+		MerchantName: merchantName,
 		ProductID:    req.ProductID,
 		ProductName:  req.ProductName,
 		Quantity:     req.Quantity,
@@ -111,4 +116,24 @@ func HandleUpdateOrderStatus(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"status": "success", "message": "订单状态已更新为: " + req.Status})
+}
+
+// HandleGetAllPurchaseOrders 管理员获取全部购买订单
+func HandleGetAllPurchaseOrders(c *gin.Context) {
+	orders, err := repository.GetAllOrders()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "data": orders, "total": len(orders)})
+}
+
+// HandleDeleteOrder 删除订单（仅已完成或已取消的订单可删除）
+func HandleDeleteOrder(c *gin.Context) {
+	id := c.Param("id")
+	if err := repository.DeleteOrder(id); err != nil {
+		c.JSON(500, gin.H{"error": "删除失败: " + err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "success", "message": "订单已删除"})
 }

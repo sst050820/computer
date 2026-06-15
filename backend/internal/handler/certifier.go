@@ -21,6 +21,24 @@ func HandleApproveReview(c *gin.Context) {
 	var req struct{ CertifierID string `json:"certifier_id"` }
 	c.ShouldBindJSON(&req)
 
+	// Jurisdiction check
+	jurisdiction := map[string][]string{
+		"u5": {"Location", "Grade"},
+		"u6": {"Quality", "Capability", "Organic"},
+	}
+	qual, _ := repository.GetQualificationByID(id)
+	if qual != nil {
+		allowed := jurisdiction[req.CertifierID]
+		found := false
+		for _, t := range allowed {
+			if t == qual.Type { found = true; break }
+		}
+		if !found {
+			c.JSON(403, gin.H{"error": "该资质类型不在您的管辖范围内"})
+			return
+		}
+	}
+
 	certifierName := ""
 	if u, err := repository.GetUserByID(req.CertifierID); err == nil && u != nil {
 		certifierName = u.Name

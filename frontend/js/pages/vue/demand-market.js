@@ -8,16 +8,16 @@ var VueDemandMarket = {
     '<div v-for="d in demands" :key="d.id" class="card" style="margin-bottom:10px;padding:var(--sp-4);cursor:pointer;border-left:4px solid;transition:all 0.15s;" :style="{borderLeftColor:d.matched?\'var(--co-success)\':\'var(--co-neutral-300)\'}" @click="openDetail(d)">' +
     '<div style="display:flex;justify-content:space-between;align-items:start;">' +
     '<div style="flex:1;"><h4 style="font-size:1rem;font-weight:600;">{{ d.title }}</h4>' +
-    '<p style="font-size:0.8rem;color:var(--co-neutral-500);margin-top:4px;">预算: {{ d.budget||"未指定" }} | 发布者: {{ d.consumer_name||"匿名" }} | {{ d.created_at }}</p>' +
+    '<p style="font-size:0.8rem;color:var(--co-neutral-500);margin-top:4px;">预算: {{ d.budget||"未指定" }} | 发布者: <span style="color:var(--co-neutral-400);">🔒 解密后可见</span> | {{ d.created_at }}</p>' +
     '<p v-if="d.policy_display" style="font-size:0.75rem;color:var(--co-neutral-500);margin-top:2px;"><i class="fas fa-tag"></i> {{ d.policy_display }}</p></div>' +
-    '<base-badge :color="d.matched?\'green\':\'neutral\'">{{ d.matched?"✅ 可接单":"🔒 加密" }}</base-badge></div></div></div>' +
+    '<base-badge :color="d._responded?\'blue\':d.matched?\'green\':\'neutral\'">{{ d._responded?"已报价":d.matched?"✅ 可接单":"🔒 加密" }}</base-badge></div></div></div>' +
     /* Detail Modal with ABE decrypt */
     '<div v-if="detail" class="modal-overlay" @click.self="detail=null"><div class="modal-content" style="max-width:550px;">' +
     '<div class="modal-header"><h3>{{ detail.title }}</h3><button class="modal-close" @click="detail=null"><i class="fas fa-times"></i></button></div>' +
     '<div class="modal-body">' +
     '<div style="margin-bottom:16px;">' +
     '<div style="display:flex;gap:16px;margin-bottom:12px;"><div style="flex:1;"><span style="color:var(--co-neutral-500);font-size:0.8rem;">预算</span><div style="font-weight:600;">{{ detail.budget||"未指定" }}</div></div>' +
-    '<div style="flex:1;"><span style="color:var(--co-neutral-500);font-size:0.8rem;">发布者</span><div style="font-weight:600;">{{ detail.consumer_name||"匿名" }}</div></div>' +
+    '<div style="flex:1;"><span style="color:var(--co-neutral-500);font-size:0.8rem;">发布者</span><div style="font-weight:600;" v-if="decryptedContent">{{ detail.consumer_name||"匿名" }}</div><div style="font-weight:600;color:var(--co-neutral-400);" v-else>🔒 解密后可见</div></div>' +
     '<div style="flex:1;"><span style="color:var(--co-neutral-500);font-size:0.8rem;">发布时间</span><div style="font-weight:600;">{{ detail.created_at }}</div></div></div>' +
     /* Match conditions */'<h4 style="margin-bottom:8px;">资质匹配情况</h4>' +
     '<div v-if="detail.match_details"><div v-for="(v,k) in detail.match_details" style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--co-neutral-100);gap:12px;">' +
@@ -33,29 +33,61 @@ var VueDemandMarket = {
     '<div v-else-if="decryptedContent" style="background:#e8f5ee;padding:14px;border-radius:var(--rd-md);border-left:4px solid var(--co-success);">' +
     '<p style="color:var(--co-success);font-weight:600;margin-bottom:4px;"><i class="fas fa-unlock"></i> ABE 解密成功 · 内容可见</p>' +
     '<div style="font-size:0.9rem;line-height:1.6;margin-top:8px;white-space:pre-wrap;">{{ decryptedContent }}</div>' +
+    '<div v-if="decryptContact" style="margin-top:8px;padding:8px 12px;background:#fff;border-radius:var(--rd-sm);border-left:3px solid var(--co-primary-400);"><i class="fas fa-phone"></i> <strong>联系方式：</strong>{{ decryptContact }}</div>' +
+    '<div v-if="decryptAddress" style="margin-top:4px;padding:8px 12px;background:#fff;border-radius:var(--rd-sm);border-left:3px solid var(--co-accent-citrus);"><i class="fas fa-map-marker-alt"></i> <strong>快递地址：</strong>{{ decryptAddress }}</div>' +
     '<p style="font-size:0.75rem;color:var(--co-neutral-500);margin-top:8px;">解密方式: {{ decryptMethod }}</p></div>' +
     '<div v-else style="text-align:center;padding:20px;color:var(--co-neutral-400);">' +
-    '<i class="fas fa-lock" style="font-size:2rem;display:block;margin-bottom:8px;"></i><button class="btn" style="background:var(--co-primary-500);color:#fff;border:none;cursor:pointer;" @click="doDecrypt">点击进行 ABE 解密验证</button></div></div>' +
+    '<i class="fas fa-lock" style="font-size:2rem;display:block;margin-bottom:8px;"></i><button @click="doDecrypt" ' +
+    'style="padding:10px 24px;border:none;border-radius:var(--rd-md);font-size:0.88rem;font-weight:600;cursor:pointer;' +
+    'background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 2px 8px rgba(45,106,79,0.25);transition:all 0.2s;" ' +
+    'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 14px rgba(45,106,79,0.35)\'" ' +
+    'onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 8px rgba(45,106,79,0.25)\'" ' +
+    '>点击进行 ABE 解密验证</button></div></div>' +
     /* Actions */'<div style="margin-top:16px;display:flex;gap:8px;">' +
-    '<button v-if="decryptedContent" class="btn" style="flex:1;justify-content:center;background:var(--co-success);color:#fff;font-weight:600;border:none;" @click="respond(detail)"><i class="fas fa-handshake"></i> 接单报价</button>' +
-    '<button v-else-if="decryptDenied" class="btn" style="flex:1;justify-content:center;background:var(--co-accent-citrus);color:#fff;font-weight:600;border:none;" @click="goQuals"><i class="fas fa-id-card"></i> 申请所需资质</button>' +
-    '<button class="btn" style="flex:1;justify-content:center;background:var(--co-neutral-100);color:var(--co-neutral-600);border:none;" @click="detail=null">关闭</button></div>' +
+    '<button v-if="decryptedContent" @click="respond(detail)" ' +
+    'style="display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center;padding:10px 20px;border:none;border-radius:var(--rd-md);font-size:0.88rem;font-weight:600;cursor:pointer;' +
+    'background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 2px 8px rgba(45,106,79,0.25);transition:all 0.2s;" ' +
+    'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 14px rgba(45,106,79,0.35)\'" ' +
+    'onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 8px rgba(45,106,79,0.25)\'" ' +
+    '><i class="fas fa-handshake"></i> 接单报价</button>' +
+    '<button v-else-if="decryptDenied" @click="goQuals" ' +
+    'style="display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center;padding:10px 20px;border:none;border-radius:var(--rd-md);font-size:0.88rem;font-weight:600;cursor:pointer;' +
+    'background:linear-gradient(135deg,#D97706,#E8964A);color:#fff;box-shadow:0 2px 8px rgba(217,119,6,0.25);transition:all 0.2s;" ' +
+    'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 14px rgba(217,119,6,0.35)\'" ' +
+    'onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 8px rgba(217,119,6,0.25)\'" ' +
+    '><i class="fas fa-id-card"></i> 申请所需资质</button>' +
+    '<button @click="detail=null" ' +
+    'style="display:inline-flex;align-items:center;gap:6px;flex:1;justify-content:center;padding:10px 20px;border:1px solid var(--co-neutral-300);border-radius:var(--rd-md);font-size:0.88rem;font-weight:500;cursor:pointer;' +
+    'background:#fff;color:var(--co-neutral-600);transition:all 0.2s;" ' +
+    'onmouseover="this.style.background=\'var(--co-neutral-50)\';this.style.borderColor=\'var(--co-neutral-400)\'" ' +
+    'onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'var(--co-neutral-300)\'" ' +
+    '>关闭</button></div>' +
     /* Respond form */'<div v-if="responding" style="margin-top:12px;padding:12px;background:var(--co-neutral-50);border-radius:var(--rd-md);">' +
     '<div class="form-group"><label class="form-label">报价（元）</label><input class="form-input" v-model="respPrice" placeholder="例如：8000" /></div>' +
     '<div class="form-group"><label class="form-label">留言</label><textarea class="form-textarea" v-model="respMsg" rows="2" placeholder="介绍您的优势和方案"></textarea></div>' +
-    '<div style="display:flex;gap:8px;"><button class="btn" style="background:var(--co-success);color:#fff;font-weight:600;border:none;" @click="doRespond" :disabled="submitting"><i v-if="submitting" class="fas fa-spinner fa-spin"></i> 提交报价</button>' +
-    '<button class="btn btn-ghost btn-sm" @click="responding=false">取消</button></div></div>' +
+    '<div style="display:flex;gap:8px;"><button @click="doRespond" :disabled="submitting" ' +
+    'style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;border:none;border-radius:var(--rd-md);font-size:0.88rem;font-weight:600;cursor:pointer;' +
+    'background:linear-gradient(135deg,#2D6A4F,#40916C);color:#fff;box-shadow:0 2px 8px rgba(45,106,79,0.25);transition:all 0.2s;" ' +
+    'onmouseover="this.style.transform=\'translateY(-1px)\';this.style.boxShadow=\'0 4px 14px rgba(45,106,79,0.35)\'" ' +
+    'onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 2px 8px rgba(45,106,79,0.25)\'" ' +
+    '><i v-if="submitting" class="fas fa-spinner fa-spin"></i> 提交报价</button>' +
+    '<button @click="responding=false" ' +
+    'style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;border:1px solid var(--co-neutral-300);border-radius:var(--rd-md);font-size:0.88rem;font-weight:500;cursor:pointer;' +
+    'background:#fff;color:var(--co-neutral-600);transition:all 0.2s;" ' +
+    'onmouseover="this.style.background=\'var(--co-neutral-50)\';this.style.borderColor=\'var(--co-neutral-400)\'" ' +
+    'onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'var(--co-neutral-300)\'" ' +
+    '>取消</button></div></div>' +
     '</div></div></div></div></div>',
-  data: function() { return { demands:[], loading:true, detail:null, responding:false, respPrice:'', respMsg:'', submitting:false, decrypting:false, decryptedContent:'', decryptDenied:false, decryptMsg:'', decryptMethod:'' }; },
+  data: function() { return { demands:[], loading:true, detail:null, responding:false, respPrice:'', respMsg:'', submitting:false, decrypting:false, decryptedContent:'', decryptContact:'', decryptAddress:'', decryptDenied:false, decryptMsg:'', decryptMethod:'' }; },
   mounted: function() {
     var self=this; var user=window.App.currentUser;
     if(!user){self.loading=false;return;}
-    API.getDemandMarket(user.id).then(function(r){self.demands=r.data||[];self.loading=false;}).catch(function(){self.loading=false;});
+    API.getDemandMarket(user.id).then(function(r){self.demands=r.data||[];var resp={};try{resp=JSON.parse(localStorage.getItem('fruit_responded_'+user.id)||'{}');}catch(e){}self.demands.forEach(function(d){d._responded=!!resp[d.id];});self.loading=false;}).catch(function(){self.loading=false;});
   },
   methods: {
     openDetail: function(d) {
       this.detail=d; this.responding=false; this.respPrice=''; this.respMsg='';
-      this.decryptedContent=''; this.decryptDenied=false; this.decryptMsg=''; this.decryptMethod='';
+      this.decryptedContent=''; this.decryptContact=''; this.decryptAddress=''; this.decryptDenied=false; this.decryptMsg=''; this.decryptMethod='';
     },
     doDecrypt: function() {
       var self=this; this.decrypting=true; this.decryptDenied=false; this.decryptedContent='';
@@ -64,7 +96,7 @@ var VueDemandMarket = {
         method:'POST',body:JSON.stringify({merchant_id:user?user.id:''})
       }).then(function(r){
         self.decrypting=false;
-        if(r&&r.decrypted&&r.plaintext){self.decryptedContent=r.plaintext;self.decryptMethod=r.method==='abe_decrypt'?'Java ABE 密码学解密':'属性匹配验证（ABE服务降级）';}
+        if(r&&r.decrypted&&r.plaintext){self.decryptedContent=r.plaintext;self.decryptContact=r.contact||'';self.decryptAddress=r.address||'';self.decryptMethod=r.method==='abe_decrypt'?'Java ABE 密码学解密':'属性匹配验证（ABE服务降级）';}
         else{self.decryptDenied=true;self.decryptMsg=(r&&r.message)||'资质不满足条件';}
       }).catch(function(){self.decrypting=false;self.decryptDenied=true;self.decryptMsg='ABE 解密服务不可用，请稍后重试';});
     },
@@ -75,7 +107,7 @@ var VueDemandMarket = {
       var user=window.App.currentUser;
       API._fetch('/api/custom-orders/'+this.detail.id+'/respond',{method:'POST',body:JSON.stringify({merchant_id:user.id,name:user.name,price:this.respPrice,message:this.respMsg||''})}).then(function(r){
         self.submitting=false; self.responding=false;
-        if(r&&r.status==='success'){window.showToast&&window.showToast('报价已提交','success');self.detail=null;}
+        if(r&&r.status==='success'){var user=window.App.currentUser;var resp={};var kid='fruit_responded_'+(user?user.id:'guest');try{resp=JSON.parse(localStorage.getItem(kid)||'{}');}catch(e){}resp[self.detail.id]=true;localStorage.setItem(kid,JSON.stringify(resp));window.showToast&&window.showToast('报价已提交','success');self.detail=null;}
         else{window.showToast&&window.showToast('提交失败','error');}
       }).catch(function(){self.submitting=false;window.showToast&&window.showToast('网络错误','error');});
     },

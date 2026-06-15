@@ -142,7 +142,7 @@ var PageRenderers = {
 
   "order-square": function(container) {
     var samples = [
-      { title: "🍵 牛奶味茶饼定制", budget: "5000-10000元", publisher: "张果农", date: "2026-06-07", conds: "产地：福建 | 制茶能力" },
+      { title: "🍵 牛奶味茶饼定制", budget: "5000-10000元", publisher: "陈食客", date: "2026-06-07", conds: "产地：福建 | 制茶能力" },
       { title: "🌸 有机茉莉花茶", budget: "8000-15000元", publisher: "李茶商", date: "2026-06-06", conds: "产地：福建 | 有机认证" },
       { title: "🍙 低糖梅干加工", budget: "3000-6000元", publisher: "王果商", date: "2026-06-05", conds: "果蔬加工 | 绿色认证" },
     ];
@@ -472,11 +472,11 @@ var PageRenderers = {
   "sys-config": function(container) { container.innerHTML = '<div class="glass-card"><div class="section-title"><i class="fas fa-cogs"></i> 系统配置</div><div style="display:grid;gap:12px;"><label>平台服务地址</label><input value="http://localhost:8080" /><label>数据保留策略（天）</label><input value="365" /><button class="btn" onclick="showToast(配置已保存,success)">保存</button></div></div>'; },
 
   "content-audit": function(container) {
-    container.innerHTML = '<div class="glass-card"><div class="section-title"><i class="fas fa-eye"></i> 内容审核</div><table><thead><tr><th>类型</th><th>内容</th><th>发布者</th><th>操作</th></tr></thead><tbody><tr><td>商品</td><td>有机铁观音</td><td>福建茶品茶厂</td><td><button class="btn btn-sm">通过</button> <button class="btn btn-outline btn-sm">下架</button></td></tr><tr><td>定制</td><td>牛奶味茶饼</td><td>张果农</td><td><button class="btn btn-sm">通过</button> <button class="btn btn-outline btn-sm">删除</button></td></tr></tbody></table></div>';
+    container.innerHTML = '<div class="glass-card"><div class="section-title"><i class="fas fa-eye"></i> 内容审核</div><table><thead><tr><th>类型</th><th>内容</th><th>发布者</th><th>操作</th></tr></thead><tbody><tr><td>商品</td><td>有机铁观音</td><td>福建茶品茶厂</td><td><button class="btn btn-sm">通过</button> <button class="btn btn-outline btn-sm">下架</button></td></tr><tr><td>定制</td><td>牛奶味茶饼</td><td>陈食客</td><td><button class="btn btn-sm">通过</button> <button class="btn btn-outline btn-sm">删除</button></td></tr></tbody></table></div>';
   },
 
   dispute: function(container) {
-    container.innerHTML = '<div class="glass-card"><div class="section-title"><i class="fas fa-gavel"></i> 纠纷处理</div><p style="color:var(--tb-text-secondary);">交易纠纷仲裁平台（管理员可查看全部加密信息）</p><div class="glass-card" style="margin-top:12px;"><h4>案例 #D001</h4><p>消费者张果农 vs 山东丰收食品厂</p><p style="font-size:0.8rem;">争议：产品质量不符 — <a href="#">查看详情</a></p><button class="btn btn-sm" style="margin-top:8px;">裁决</button></div></div>';
+    container.innerHTML = '<div class="glass-card"><div class="section-title"><i class="fas fa-gavel"></i> 纠纷处理</div><p style="color:var(--tb-text-secondary);">交易纠纷仲裁平台（管理员可查看全部加密信息）</p><div class="glass-card" style="margin-top:12px;"><h4>案例 #D001</h4><p>消费者陈食客 vs 山东丰收食品厂</p><p style="font-size:0.8rem;">争议：产品质量不符 — <a href="#">查看详情</a></p><button class="btn btn-sm" style="margin-top:8px;">裁决</button></div></div>';
   },
 
   "audit-log": function(container) {

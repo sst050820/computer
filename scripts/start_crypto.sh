@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 编译并启动 Java ABE 加密服务
+# 编译并启动 Java ABE 密码学服务
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG="$ROOT/logs"
@@ -15,19 +15,16 @@ if ! command -v javac &>/dev/null || ! command -v java &>/dev/null; then
   exit 1
 fi
 
+# 杀掉旧进程
+fuser -k 8081/tcp 2>/dev/null || true
+
 # 编译
-echo "编译 ABE 服务源码..."
-javac -cp "lib/*" -d classes \
-  CryptoServer.java \
-  java/compositeOrderPairingGroups.java \
-  java/MAFASACAR/*.java \
-  java/PublicStructure/*.java \
-  java/utils/*.java
+echo "编译 ABE 密码学服务..."
+javac -cp "lib/*:classes" -d classes CryptoServer.java
 echo "✓ 编译完成"
 
 # 启动
 echo "启动 ABE 服务 (端口 8081)..."
-nohup java -cp "classes:lib/*" CryptoServer > "$LOG/java.log" 2>&1 &
-PID=$!
-echo "✓ ABE 服务已启动 PID=$PID"
-echo "  API: http://localhost:8081/api/encrypt"
+nohup java -cp "lib/*:classes" CryptoServer > "$LOG/abe.log" 2>&1 &
+echo "✓ ABE 服务已启动"
+echo "  端点: /api/encrypt | /api/decrypt | /api/revoke | /api/rekey | /api/reencrypt"

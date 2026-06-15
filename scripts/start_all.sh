@@ -22,8 +22,8 @@ echo "  MySQL 就绪"
 echo "[2/4] 启动 Fabric (可选)..."
 bash "$ROOT/scripts/start_fabric.sh" 2>/dev/null || echo "  Fabric 未就绪，跳过"
 
-echo "[3/4] 启动 ABE 加密服务 (可选)..."
-bash "$ROOT/scripts/start_crypto.sh" 2>/dev/null || echo "  ABE 服务未就绪，跳过"
+echo "[3/4] 启动 ABE 密码学服务..."
+bash "$ROOT/scripts/start_crypto.sh" 2>/dev/null || echo "  ABE 服务未就绪（加密将降级为明文）"
 
 echo "[4/4] 启动 Go 后端..."
 cd "$ROOT/backend"

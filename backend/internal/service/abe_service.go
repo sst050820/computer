@@ -43,9 +43,13 @@ func PolicyToDisplay(policy string) string {
 }
 
 // EncryptWithABE 调用 Java ABE 加密
-func EncryptWithABE(plaintext string) (sessionID, ciphertext string, err error) {
+// condCount: 条件数量（LSSS 矩阵大小）
+func EncryptWithABE(plaintext string, condCount int) (sessionID, ciphertext string, err error) {
 	url := os.Getenv("ABE_SERVICE_URL")
 	if url == "" { url = defaultEncryptURL }
+	if condCount < 1 { condCount = 1 }
+	if condCount > 5 { condCount = 5 }
+	url = fmt.Sprintf("%s?n=%d", url, condCount)
 	client := http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Post(url, "text/plain", bytes.NewBufferString(plaintext))
 	if err != nil { return "", plaintext, nil } // 降级

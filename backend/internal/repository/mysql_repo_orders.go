@@ -9,9 +9,9 @@ import (
 
 func CreateOrder(o *model.Order) error {
 	_, err := DB.Exec(
-		`INSERT INTO orders (id, consumer_id, consumer_name, merchant_id, product_id, product_name, quantity, price, total, status, remark)
-		 VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-		o.ID, o.ConsumerID, o.ConsumerName, o.MerchantID, o.ProductID, o.ProductName,
+		`INSERT INTO orders (id, consumer_id, consumer_name, merchant_id, merchant_name, product_id, product_name, quantity, price, total, status, remark)
+		 VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+		o.ID, o.ConsumerID, o.ConsumerName, o.MerchantID, o.MerchantName, o.ProductID, o.ProductName,
 		o.Quantity, o.Price, o.Total, o.Status, o.Remark,
 	)
 	return err
@@ -19,7 +19,7 @@ func CreateOrder(o *model.Order) error {
 
 func GetOrdersByMerchant(merchantID string) ([]model.Order, error) {
 	rows, err := DB.Query(
-		`SELECT id, consumer_id, consumer_name, merchant_id, product_id, product_name,
+		`SELECT id, consumer_id, consumer_name, merchant_id, merchant_name, product_id, product_name,
 		        quantity, price, total, status, IFNULL(remark,''), created_at
 		 FROM orders WHERE merchant_id=? ORDER BY created_at DESC`, merchantID)
 	if err != nil {
@@ -31,7 +31,7 @@ func GetOrdersByMerchant(merchantID string) ([]model.Order, error) {
 
 func GetOrdersByConsumer(consumerID string) ([]model.Order, error) {
 	rows, err := DB.Query(
-		`SELECT id, consumer_id, consumer_name, merchant_id, product_id, product_name,
+		`SELECT id, consumer_id, consumer_name, merchant_id, merchant_name, product_id, product_name,
 		        quantity, price, total, status, IFNULL(remark,''), created_at
 		 FROM orders WHERE consumer_id=? ORDER BY created_at DESC`, consumerID)
 	if err != nil {
@@ -43,7 +43,7 @@ func GetOrdersByConsumer(consumerID string) ([]model.Order, error) {
 
 func GetAllOrders() ([]model.Order, error) {
 	rows, err := DB.Query(
-		`SELECT id, consumer_id, consumer_name, merchant_id, product_id, product_name,
+		`SELECT id, consumer_id, consumer_name, merchant_id, merchant_name, product_id, product_name,
 		        quantity, price, total, status, IFNULL(remark,''), created_at
 		 FROM orders ORDER BY created_at DESC`)
 	if err != nil {
@@ -58,6 +58,11 @@ func UpdateOrderStatus(orderID, status string) error {
 	return err
 }
 
+func DeleteOrder(id string) error {
+	_, err := DB.Exec("DELETE FROM orders WHERE id=?", id)
+	return err
+}
+
 func CountOrders() int {
 	var count int
 	DB.QueryRow("SELECT COUNT(*) FROM orders").Scan(&count)
@@ -68,7 +73,7 @@ func scanOrders(rows *sql.Rows) ([]model.Order, error) {
 	var orders []model.Order
 	for rows.Next() {
 		var o model.Order
-		if err := rows.Scan(&o.ID, &o.ConsumerID, &o.ConsumerName, &o.MerchantID,
+		if err := rows.Scan(&o.ID, &o.ConsumerID, &o.ConsumerName, &o.MerchantID, &o.MerchantName,
 			&o.ProductID, &o.ProductName, &o.Quantity, &o.Price, &o.Total,
 			&o.Status, &o.Remark, &o.CreatedAt); err != nil {
 			return nil, err
