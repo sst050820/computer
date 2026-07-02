@@ -513,73 +513,134 @@ func SeedDemoData() {
 		log.Println("[Seed] 数据已完整，跳过种子导入")
 		return
 	}
-	log.Printf("[Seed] 导入数据 (users:%d→8, products:%d→28, quals:%d→7)", userCount, prodCount, qualCount)
+	log.Printf("[Seed] 导入数据 (users:%d→28, products:%d→30, quals:%d→36)", userCount, prodCount, qualCount)
 
 	// Demo users (skip if exist)
 	if userCount == 0 {
-		users := []model.User{
+	users := []model.User{
 		{ID: "u1", Username: "shike", Password: "123456", Name: "陈食客", Role: "consumer", Location: "福建"},
-		{ID: "u2", Username: "fujianmingpin", Password: "123456", Name: "福建名品茶厂", Role: "merchant", Location: "福建"},
-		{ID: "u3", Username: "shandongfengshou", Password: "123456", Name: "山东丰收食品厂", Role: "merchant", Location: "山东"},
-		{ID: "u4", Username: "zhejianglongjing", Password: "123456", Name: "浙江龙井茶园", Role: "merchant", Location: "浙江"},
+		// 18 Fujian merchant accounts by region
+		{ID: "u10", Username: "sanming", Password: "123456", Name: "三明农产品", Role: "merchant", Location: "三明"},
+		{ID: "u11", Username: "nanping", Password: "123456", Name: "南平农产品", Role: "merchant", Location: "南平"},
+		{ID: "u12", Username: "xiamen", Password: "123456", Name: "厦门农产品", Role: "merchant", Location: "厦门"},
+		{ID: "u13", Username: "anxi", Password: "123456", Name: "安溪茶叶", Role: "merchant", Location: "安溪"},
+		{ID: "u14", Username: "pingnan", Password: "123456", Name: "屏南农产品", Role: "merchant", Location: "屏南"},
+		{ID: "u15", Username: "pinghe", Password: "123456", Name: "平和农产品", Role: "merchant", Location: "平和"},
+		{ID: "u16", Username: "wuyishan", Password: "123456", Name: "武夷山农产品", Role: "merchant", Location: "武夷山"},
+		{ID: "u17", Username: "yongtai", Password: "123456", Name: "永泰农产品", Role: "merchant", Location: "永泰"},
+		{ID: "u18", Username: "zhangzhou", Password: "123456", Name: "漳州农产品", Role: "merchant", Location: "漳州"},
+		{ID: "u19", Username: "putian", Password: "123456", Name: "莆田农产品", Role: "merchant", Location: "莆田"},
+		{ID: "u20", Username: "gutian", Password: "123456", Name: "古田农产品", Role: "merchant", Location: "古田"},
+		{ID: "u21", Username: "datian", Password: "123456", Name: "大田农产品", Role: "merchant", Location: "大田"},
+		{ID: "u22", Username: "jianning", Password: "123456", Name: "建宁农产品", Role: "merchant", Location: "建宁"},
+		{ID: "u23", Username: "jianyang", Password: "123456", Name: "建阳农产品", Role: "merchant", Location: "建阳"},
+		{ID: "u24", Username: "fuan", Password: "123456", Name: "福安农产品", Role: "merchant", Location: "福安"},
+		{ID: "u25", Username: "minqing", Password: "123456", Name: "闽清农产品", Role: "merchant", Location: "闽清"},
+		{ID: "u26", Username: "longyan", Password: "123456", Name: "龙岩农产品", Role: "merchant", Location: "龙岩"},
+		{ID: "u27", Username: "fuzhou", Password: "123456", Name: "福州农产品", Role: "merchant", Location: "福州"},
+		// Certifiers / Admin / Regulator
 		{ID: "u5", Username: "fujiangongshang", Password: "123456", Name: "福建省工商认证中心", Role: "certifier", Location: "福建"},
 		{ID: "u6", Username: "youjirenzheng", Password: "123456", Name: "有机食品认证协会", Role: "certifier", Location: "北京"},
 		{ID: "u7", Username: "admin", Password: "admin123", Name: "平台管理员", Role: "admin", Location: ""},
 		{ID: "u8", Username: "shiyaojian", Password: "123456", Name: "食品药品监管局", Role: "regulator", Location: "北京"},
-		{ID: "u9", Username: "caoyuanmuye", Password: "123456", Name: "草原牧业", Role: "merchant", Location: "内蒙古"},
 	}
 	for i := range users {
 		CreateUser(&users[i])
 	}
 	}
 
-	// Demo qualifications (skip if exist)
+	// Demo qualifications (38 items for 18 merchants, skip if exist)
 	if qualCount == 0 {
 	quals := []model.Qualification{
-		{ID: "q1", HolderID: "u2", HolderName: "福建名品茶厂", Type: "Location", Value: "福建", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-01-01"},
-		{ID: "q2", HolderID: "u2", HolderName: "福建名品茶厂", Type: "Capability", Value: "制茶", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-01-01"},
-		{ID: "q3", HolderID: "u2", HolderName: "福建名品茶厂", Type: "Grade", Value: "3", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2026-08-01"},
-		{ID: "q4", HolderID: "u3", HolderName: "山东丰收食品厂", Type: "Location", Value: "山东", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-01-01"},
-		{ID: "q5", HolderID: "u3", HolderName: "山东丰收食品厂", Type: "Quality", Value: "有机", Status: "pending"},
-		{ID: "q6", HolderID: "u4", HolderName: "浙江龙井茶园", Type: "Location", Value: "浙江", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-01-01"},
-		{ID: "q7", HolderID: "u4", HolderName: "浙江龙井茶园", Type: "Quality", Value: "有机", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2026-09-01"},
+		{ID: "q10", HolderID: "u10", HolderName: "三明农产品", Type: "Location", Value: "三明", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q10b", HolderID: "u10", HolderName: "三明农产品", Type: "Quality", Value: "绿色", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q11", HolderID: "u11", HolderName: "南平农产品", Type: "Location", Value: "南平", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q11b", HolderID: "u11", HolderName: "南平农产品", Type: "Quality", Value: "绿色", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q12", HolderID: "u12", HolderName: "厦门农产品", Type: "Location", Value: "厦门", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q12b", HolderID: "u12", HolderName: "厦门农产品", Type: "Quality", Value: "绿色", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q13", HolderID: "u13", HolderName: "安溪茶叶", Type: "Location", Value: "安溪", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q13b", HolderID: "u13", HolderName: "安溪茶叶", Type: "Quality", Value: "有机", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q14", HolderID: "u14", HolderName: "屏南农产品", Type: "Location", Value: "屏南", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q15", HolderID: "u15", HolderName: "平和农产品", Type: "Location", Value: "平和", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q16", HolderID: "u16", HolderName: "武夷山农产品", Type: "Location", Value: "武夷山", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q16b", HolderID: "u16", HolderName: "武夷山农产品", Type: "Quality", Value: "有机", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q17", HolderID: "u17", HolderName: "永泰农产品", Type: "Location", Value: "永泰", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q18", HolderID: "u18", HolderName: "漳州农产品", Type: "Location", Value: "漳州", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q18b", HolderID: "u18", HolderName: "漳州农产品", Type: "Quality", Value: "绿色", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q19", HolderID: "u19", HolderName: "莆田农产品", Type: "Location", Value: "莆田", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q19b", HolderID: "u19", HolderName: "莆田农产品", Type: "Quality", Value: "绿色", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q20", HolderID: "u20", HolderName: "古田农产品", Type: "Location", Value: "古田", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q21", HolderID: "u21", HolderName: "大田农产品", Type: "Location", Value: "大田", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q22", HolderID: "u22", HolderName: "建宁农产品", Type: "Location", Value: "建宁", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q22b", HolderID: "u22", HolderName: "建宁农产品", Type: "Quality", Value: "绿色", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q23", HolderID: "u23", HolderName: "建阳农产品", Type: "Location", Value: "建阳", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q24", HolderID: "u24", HolderName: "福安农产品", Type: "Location", Value: "福安", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q25", HolderID: "u25", HolderName: "闽清农产品", Type: "Location", Value: "闽清", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q26", HolderID: "u26", HolderName: "龙岩农产品", Type: "Location", Value: "龙岩", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q26b", HolderID: "u26", HolderName: "龙岩农产品", Type: "Quality", Value: "绿色", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		{ID: "q27", HolderID: "u27", HolderName: "福州农产品", Type: "Location", Value: "福州", Status: "active", CertifierID: "u5", CertifierName: "福建省工商认证中心", ExpiresAt: "2027-12-31"},
+		{ID: "q27b", HolderID: "u27", HolderName: "福州农产品", Type: "Quality", Value: "绿色", Status: "active", CertifierID: "u6", CertifierName: "有机食品认证协会", ExpiresAt: "2027-12-31"},
+		// Pending qualifications for demo flow
+		{ID: "q50", HolderID: "u10", HolderName: "三明农产品", Type: "Quality", Value: "有机", Status: "pending"},
+		{ID: "q51", HolderID: "u13", HolderName: "安溪茶叶", Type: "Grade", Value: "3", Status: "pending"},
+		{ID: "q52", HolderID: "u16", HolderName: "武夷山农产品", Type: "Grade", Value: "5", Status: "pending"},
 	}
 	for i := range quals {
 		CreateQualification(&quals[i])
 	}
 	}
 
-	// Demo products (28 items, skip if exist)
+	// Demo products (30 Fujian items, skip if exist)
 	if prodCount == 0 {
 	products := []model.Product{
-		{ID: "p1", Name: "武夷山大红袍", Category: "茶叶", Origin: "福建", Price: 388, Certification: "有机", Traceable: true, ShopID: "u2", ShopName: "福建名品茶厂"},
-		{ID: "p2", Name: "安溪铁观音", Category: "茶叶", Origin: "福建", Price: 268, Certification: "地理标志", Traceable: true, ShopID: "u2", ShopName: "福建名品茶厂"},
-		{ID: "p3", Name: "云南野生菌菇礼盒", Category: "菌菇", Origin: "云南", Price: 168, Certification: "绿色", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p4", Name: "烟台红富士苹果", Category: "果蔬", Origin: "山东", Price: 59.9, Certification: "无公害", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p5", Name: "西湖龙井绿茶", Category: "茶叶", Origin: "浙江", Price: 298, Certification: "有机", Traceable: true, ShopID: "u4", ShopName: "浙江龙井茶园"},
-		{ID: "p6", Name: "有机五常大米", Category: "谷物", Origin: "黑龙江", Price: 89.9, Certification: "有机", Traceable: true, ShopID: "u2", ShopName: "福建名品茶厂"},
-		{ID: "p7", Name: "长白山椴树蜜", Category: "蜂蜜", Origin: "吉林", Price: 128, Certification: "绿色", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p8", Name: "内蒙古风干牛肉", Category: "畜牧", Origin: "内蒙古", Price: 99, Certification: "无公害", Traceable: true, ShopID: "u9", ShopName: "草原牧业"},
-		{ID: "p9", Name: "黄山毛峰", Category: "茶叶", Origin: "安徽", Price: 328, Certification: "地理标志", Traceable: true, ShopID: "u2", ShopName: "福建名品茶厂"},
-		{ID: "p10", Name: "普洱茶饼", Category: "茶叶", Origin: "云南", Price: 598, Certification: "有机", Traceable: true, ShopID: "u4", ShopName: "浙江龙井茶园"},
-		{ID: "p11", Name: "福鼎白茶", Category: "茶叶", Origin: "福建", Price: 258, Certification: "绿色", Traceable: true, ShopID: "u2", ShopName: "福建名品茶厂"},
-		{ID: "p12", Name: "新疆哈密瓜", Category: "果蔬", Origin: "新疆", Price: 39.9, Certification: "无公害", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p13", Name: "赣南脐橙", Category: "果蔬", Origin: "江西", Price: 49.9, Certification: "绿色", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p14", Name: "海南金煌芒果", Category: "果蔬", Origin: "海南", Price: 68, Certification: "无公害", Traceable: true, ShopID: "u4", ShopName: "浙江龙井茶园"},
-		{ID: "p15", Name: "吐鲁番无核白葡萄", Category: "果蔬", Origin: "新疆", Price: 45, Certification: "绿色", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p16", Name: "东北黑米", Category: "谷物", Origin: "黑龙江", Price: 35, Certification: "有机", Traceable: true, ShopID: "u2", ShopName: "福建名品茶厂"},
-		{ID: "p17", Name: "宁夏枸杞", Category: "谷物", Origin: "宁夏", Price: 78, Certification: "地理标志", Traceable: true, ShopID: "u4", ShopName: "浙江龙井茶园"},
-		{ID: "p18", Name: "山西沁州黄小米", Category: "谷物", Origin: "山西", Price: 42, Certification: "绿色", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p19", Name: "西藏牦牛肉干", Category: "畜牧", Origin: "西藏", Price: 158, Certification: "有机", Traceable: true, ShopID: "u9", ShopName: "草原牧业"},
-		{ID: "p20", Name: "金华火腿", Category: "畜牧", Origin: "浙江", Price: 288, Certification: "地理标志", Traceable: true, ShopID: "u4", ShopName: "浙江龙井茶园"},
-		{ID: "p21", Name: "宁夏盐池滩羊肉", Category: "畜牧", Origin: "宁夏", Price: 198, Certification: "有机", Traceable: true, ShopID: "u9", ShopName: "草原牧业"},
-		{ID: "p22", Name: "云南鲜花饼", Category: "零食", Origin: "云南", Price: 68, Certification: "绿色", Traceable: true, ShopID: "u4", ShopName: "浙江龙井茶园"},
-		{ID: "p23", Name: "天津十八街麻花", Category: "零食", Origin: "天津", Price: 35, Certification: "无公害", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p24", Name: "鲁花压榨花生油", Category: "粮油", Origin: "山东", Price: 128, Certification: "绿色", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
-		{ID: "p25", Name: "四川汉源花椒油", Category: "粮油", Origin: "四川", Price: 58, Certification: "地理标志", Traceable: true, ShopID: "u4", ShopName: "浙江龙井茶园"},
-		{ID: "p26", Name: "东北黑木耳", Category: "菌菇", Origin: "黑龙江", Price: 88, Certification: "有机", Traceable: true, ShopID: "u2", ShopName: "福建名品茶厂"},
-		{ID: "p27", Name: "古田银耳", Category: "菌菇", Origin: "福建", Price: 68, Certification: "绿色", Traceable: true, ShopID: "u2", ShopName: "福建名品茶厂"},
-		{ID: "p28", Name: "秦岭土蜂蜜", Category: "蜂蜜", Origin: "陕西", Price: 168, Certification: "有机", Traceable: true, ShopID: "u3", ShopName: "山东丰收食品厂"},
+		// 三明 (u10) — 2 products
+		{ID: "p1", Name: "三明白背木耳", Category: "菌菇", Origin: "三明", Price: 68, Image: "/public/images/三明白背木耳.jpg", Certification: "绿色", Traceable: true, ShopID: "u10", ShopName: "三明农产品"},
+		{ID: "p2", Name: "三明红菇", Category: "菌菇", Origin: "三明", Price: 188, Image: "/public/images/三明红菇.jpg", Certification: "绿色", Traceable: true, ShopID: "u10", ShopName: "三明农产品"},
+		// 南平 (u11) — 2 products
+		{ID: "p3", Name: "南平丹桂茶", Category: "茶叶", Origin: "南平", Price: 128, Image: "/public/images/南平丹桂茶.jpg", Certification: "绿色", Traceable: true, ShopID: "u11", ShopName: "南平农产品"},
+		{ID: "p4", Name: "南平熏鹅", Category: "畜牧", Origin: "南平", Price: 98, Image: "/public/images/南平熏鹅.jpg", Certification: "绿色", Traceable: true, ShopID: "u11", ShopName: "南平农产品"},
+		// 厦门 (u12) — 2 products
+		{ID: "p5", Name: "厦门土笋冻", Category: "零食", Origin: "厦门", Price: 48, Image: "/public/images/厦门土笋冻.jpg", Certification: "绿色", Traceable: true, ShopID: "u12", ShopName: "厦门农产品"},
+		{ID: "p6", Name: "厦门树葡萄", Category: "果蔬", Origin: "厦门", Price: 158, Image: "/public/images/厦门树葡萄.jpg", Certification: "绿色", Traceable: true, ShopID: "u12", ShopName: "厦门农产品"},
+		// 安溪 (u13) — 1 product
+		{ID: "p7", Name: "安溪铁观音", Category: "茶叶", Origin: "安溪", Price: 298, Image: "/public/images/安溪铁观音.jpg", Certification: "有机", Traceable: true, ShopID: "u13", ShopName: "安溪茶叶"},
+		// 屏南 (u14) — 1 product
+		{ID: "p8", Name: "屏南芙蓉李", Category: "果蔬", Origin: "屏南", Price: 58, Image: "/public/images/屏南芙蓉李.jpg", Certification: "无公害", Traceable: true, ShopID: "u14", ShopName: "屏南农产品"},
+		// 平和 (u15) — 1 product
+		{ID: "p9", Name: "平和蜜柚", Category: "果蔬", Origin: "平和", Price: 78, Image: "/public/images/平和蜜柚.jpg", Certification: "绿色", Traceable: true, ShopID: "u15", ShopName: "平和农产品"},
+		// 武夷山 (u16) — 1 product
+		{ID: "p10", Name: "武夷山竹荪", Category: "菌菇", Origin: "武夷山", Price: 258, Image: "/public/images/武夷山竹荪.jpg", Certification: "有机", Traceable: true, ShopID: "u16", ShopName: "武夷山农产品"},
+		// 永泰 (u17) — 1 product
+		{ID: "p11", Name: "永泰青梅", Category: "果蔬", Origin: "永泰", Price: 35, Image: "/public/images/永泰青梅.jpg", Certification: "无公害", Traceable: true, ShopID: "u17", ShopName: "永泰农产品"},
+		// 漳州 (u18) — 4 products
+		{ID: "p12", Name: "漳州杨桃", Category: "果蔬", Origin: "漳州", Price: 88, Image: "/public/images/漳州杨桃.jpg", Certification: "绿色", Traceable: true, ShopID: "u18", ShopName: "漳州农产品"},
+		{ID: "p13", Name: "漳州杨梅", Category: "果蔬", Origin: "漳州", Price: 68, Image: "/public/images/漳州杨梅.jpg", Certification: "绿色", Traceable: true, ShopID: "u18", ShopName: "漳州农产品"},
+		{ID: "p14", Name: "漳州沃柑", Category: "果蔬", Origin: "漳州", Price: 52, Image: "/public/images/漳州沃柑.jpg", Certification: "绿色", Traceable: true, ShopID: "u18", ShopName: "漳州农产品"},
+		{ID: "p15", Name: "漳州莲雾", Category: "果蔬", Origin: "漳州", Price: 128, Image: "/public/images/漳州莲雾.jpg", Certification: "绿色", Traceable: true, ShopID: "u18", ShopName: "漳州农产品"},
+		// 莆田 (u19) — 3 products
+		{ID: "p16", Name: "莆田白梨枇杷", Category: "果蔬", Origin: "莆田", Price: 98, Image: "/public/images/莆田白梨枇杷.jpg", Certification: "绿色", Traceable: true, ShopID: "u19", ShopName: "莆田农产品"},
+		{ID: "p17", Name: "莆田荔枝", Category: "果蔬", Origin: "莆田", Price: 88, Image: "/public/images/莆田荔枝.jpg", Certification: "绿色", Traceable: true, ShopID: "u19", ShopName: "莆田农产品"},
+		{ID: "p18", Name: "莆田龙眼", Category: "果蔬", Origin: "莆田", Price: 78, Image: "/public/images/莆田龙眼.jpg", Certification: "绿色", Traceable: true, ShopID: "u19", ShopName: "莆田农产品"},
+		// 古田 (u20) — 1 product
+		{ID: "p19", Name: "古田油奈李", Category: "果蔬", Origin: "古田", Price: 45, Image: "/public/images/古田油奈李.jpg", Certification: "无公害", Traceable: true, ShopID: "u20", ShopName: "古田农产品"},
+		// 大田 (u21) — 1 product
+		{ID: "p20", Name: "大田雪蔗", Category: "果蔬", Origin: "大田", Price: 38, Image: "/public/images/大田雪蔗.jpg", Certification: "无公害", Traceable: true, ShopID: "u21", ShopName: "大田农产品"},
+		// 建宁 (u22) — 2 products
+		{ID: "p21", Name: "建宁翠冠梨", Category: "果蔬", Origin: "建宁", Price: 55, Image: "/public/images/建宁翠冠梨.jpg", Certification: "绿色", Traceable: true, ShopID: "u22", ShopName: "建宁农产品"},
+		{ID: "p22", Name: "建宁莲子", Category: "谷物", Origin: "建宁", Price: 148, Image: "/public/images/建宁莲子.jpg", Certification: "绿色", Traceable: true, ShopID: "u22", ShopName: "建宁农产品"},
+		// 建阳 (u23) — 1 product
+		{ID: "p23", Name: "建阳桔柚", Category: "果蔬", Origin: "建阳", Price: 65, Image: "/public/images/建阳桔柚.jpg", Certification: "无公害", Traceable: true, ShopID: "u23", ShopName: "建阳农产品"},
+		// 福安 (u24) — 1 product
+		{ID: "p24", Name: "福安穆阳水蜜桃", Category: "果蔬", Origin: "福安", Price: 108, Image: "/public/images/福安穆阳水蜜桃.jpg", Certification: "绿色", Traceable: true, ShopID: "u24", ShopName: "福安农产品"},
+		// 闽清 (u25) — 1 product
+		{ID: "p25", Name: "闽清橄榄", Category: "果蔬", Origin: "闽清", Price: 42, Image: "/public/images/闽清橄榄.jpg", Certification: "无公害", Traceable: true, ShopID: "u25", ShopName: "闽清农产品"},
+		// 龙岩 (u26) — 2 products
+		{ID: "p26", Name: "龙岩柿饼", Category: "零食", Origin: "龙岩", Price: 58, Image: "/public/images/龙岩柿饼.jpg", Certification: "绿色", Traceable: true, ShopID: "u26", ShopName: "龙岩农产品"},
+		{ID: "p27", Name: "龙岩花生", Category: "谷物", Origin: "龙岩", Price: 32, Image: "/public/images/龙岩花生.jpg", Certification: "绿色", Traceable: true, ShopID: "u26", ShopName: "龙岩农产品"},
+		// 福州 (u27) — 3 products
+		{ID: "p28", Name: "福州永泰李干", Category: "零食", Origin: "福州", Price: 35, Image: "/public/images/福州永泰李干.jpg", Certification: "无公害", Traceable: true, ShopID: "u27", ShopName: "福州农产品"},
+		{ID: "p29", Name: "福州茉莉花茶", Category: "茶叶", Origin: "福州", Price: 198, Image: "/public/images/福州茉莉花茶.jpg", Certification: "绿色", Traceable: true, ShopID: "u27", ShopName: "福州农产品"},
+		{ID: "p30", Name: "福州鱼丸", Category: "畜牧", Origin: "福州", Price: 68, Image: "/public/images/福州鱼丸.jpg", Certification: "绿色", Traceable: true, ShopID: "u27", ShopName: "福州农产品"},
 	}
 	for i := range products {
 		CreateProduct(&products[i])

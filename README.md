@@ -23,17 +23,33 @@ go build -o server . && nohup ./server > /tmp/server.log 2>&1 &
 
 ## 账号
 
-| 角色 | 用户名 | 密码 | 姓名 | 说明 |
-|------|--------|------|------|------|
-| 🛒 消费者 | `shike` | `123456` | 陈食客 | 浏览商品、发布定制需求、下单 |
-| 🏭 商家 | `fujianmingpin` | `123456` | 福建名品茶厂 | 4项资质，最全面 |
-| 🏭 商家 | `shandongfengshou` | `123456` | 山东丰收食品厂 | 2项资质 |
-| 🏭 商家 | `zhejianglongjing` | `123456` | 浙江龙井茶园 | 2项资质 |
-| 🏭 商家 | `caoyuanmuye` | `123456` | 草原牧业 | 无资质 |
-| 🏛️ 审核方 | `fujiangongshang` | `123456` | 福建省工商认证中心 | 管辖 Location、Grade |
-| 🏛️ 审核方 | `youjirenzheng` | `123456` | 有机食品认证协会 | 管辖 Quality、Organic |
-| ⚙️ 管理员 | `admin` | `admin123` | 平台管理员 | 全局管理 |
-| 🔍 监管方 | `shiyaojian` | `123456` | 食品药品监管局 | 追溯审查、应急解密 |
+### 消费者
+| 用户名 | 密码 | 姓名 |
+|--------|------|------|
+| `shike` | `123456` | 陈食客 |
+
+### 商家（9 个福建市级商家，密码均为 `123456`）
+
+| 用户名 | 商家名 | 地区 | 产品数 |
+|--------|--------|------|--------|
+| `sanming` | 三明农产品 | 三明（含大田、建宁） | 5 |
+| `nanping` | 南平农产品 | 南平（含武夷山、建阳） | 4 |
+| `ningde` | 宁德农产品 | 宁德（含福安、屏南、古田） | 3 |
+| `fuzhou` | 福州农产品 | 福州（含永泰、闽清） | 5 |
+| `longyan` | 龙岩农产品 | 龙岩 | 2 |
+| `putian` | 莆田农产品 | 莆田 | 3 |
+| `quanzhou` | 泉州农产品 | 泉州（含安溪） | 1 |
+| `zhangzhou` | 漳州农产品 | 漳州（含平和） | 5 |
+| `xiamen` | 厦门农产品 | 厦门 | 2 |
+
+### 审核方、管理员、监管方
+
+| 角色 | 用户名 | 密码 | 管辖 |
+|------|--------|------|------|
+| 🏛️ 审核方 | `fujiangongshang` | `123456` | Location、Grade |
+| 🏛️ 审核方 | `youjirenzheng` | `123456` | Quality、Capability、Organic |
+| ⚙️ 管理员 | `admin` | `admin123` | 全局管理 |
+| 🔍 监管方 | `shiyaojian` | `123456` | 追溯审查、应急解密 |
 
 ## 技术栈
 
@@ -41,22 +57,22 @@ go build -o server . && nohup ./server > /tmp/server.log 2>&1 &
 |----|------|------|
 | 前端 | Vue 3 CDN + 原生 HTML/CSS/JS | 无构建工具 SPA，28 个页面组件 |
 | 后端 | Go 1.25+ + Gin | ~45 条 API 路由 |
-| 数据库 | MySQL 8.0（Docker） | 9 用户 + 28 商品 + 7 资质 |
+| 数据库 | MySQL 8.0（Docker） | 21 用户 + 30 商品 + 21 资质 |
 | 密码学 | Java 17 + JPBC | MAFASAC-AR，复合阶双线性群 |
 | 区块链 | Hyperledger Fabric 2.3 | 追溯链码（可选组件） |
-| ABE 方案 | 复合阶群 + LSSS 访问结构 | 支持属性撤销 + 密钥轮换 + 重加密 |
+| ABE 方案 | 全局共享 GPP + 动态 LSSS | 加密/解密/撤销/轮换/重加密 |
 
 ## ABE 密码学服务（5 个端点）
 
-Java ABE 服务 (`:8081`) 使用全局共享 GPP 架构，所有会话共用同一份系统参数，确保撤销/轮换全局生效：
+Java ABE 服务 (`:8081`) 使用全局共享 GPP 架构：
 
 | 端点 | 说明 |
 |------|------|
-| `POST /api/encrypt?n=N` | ABE 加密，N = 条件数量（LSSS 矩阵维度） |
-| `POST /api/decrypt` | ABE 解密，传入密文 + 属性，动态密钥生成 |
-| `POST /api/revoke` | 属性撤销，`SysUpd()` 更新全局公钥参数 |
-| `POST /api/rekey` | 系统密钥轮换，所有旧通行证失效 |
-| `POST /api/reencrypt` | 密文重加密，`CTUpd()` 适配新密钥 |
+| `POST /api/encrypt?n=N` | 加密，N = 条件数量 |
+| `POST /api/decrypt` | 解密（动态属性密钥生成） |
+| `POST /api/revoke` | 属性撤销（SysUpd 全局公钥更新） |
+| `POST /api/rekey` | 密钥轮换（SysUpd） |
+| `POST /api/reencrypt` | 重加密（CTUpd） |
 
 ## 项目结构
 
@@ -65,6 +81,7 @@ program/
 ├── frontend/              # Vue 3 SPA 前端
 │   ├── index.html         # App 壳
 │   ├── css/app.css        # 森林绿设计系统
+│   ├── public/images/     # 30 张福建农产品图片
 │   └── js/
 │       ├── api.js / app.js / vue-app.js
 │       ├── components/    # 12 个基础组件
@@ -80,21 +97,18 @@ program/
 │       └── router/        # ~45 条路由
 ├── chaincode/             # Fabric 追溯链码
 ├── crypto_service/        # Java ABE 密码学服务 (:8081)
-│   ├── CryptoServer.java  # HTTP 服务主类
-│   └── java/MAFASACAR/    # MAFASAC-AR 算法实现
 ├── scripts/               # 运维脚本
 ├── deploy/                # 部署配置
-├── docs/                  # 项目文档 + Obsidian
-└── logs/                  # 运行日志
+└── docs/                  # 项目文档 + Obsidian
 ```
 
 ## 数据库
 
 | 表 | 内容 |
 |----|------|
-| `users` | 9 个用户（含 contact/address） |
-| `products` | 28 种商品（支持编辑） |
-| `qualifications` | 7 项资质 |
+| `users` | 21 个用户（9 商家 + 1 消费者 + 2 审核方 + 1 管理员 + 1 监管方） |
+| `products` | 30 种福建农产品（含图片路径） |
+| `qualifications` | 21 项资质 |
 | `custom_orders` | 定制需求（ABE 加密存储） |
 | `orders` | 购买订单（含 merchant_name） |
 | `order_responses` | 商家报价（防重复） |
