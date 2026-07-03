@@ -1,6 +1,6 @@
 var ConditionSelector = {
   conditionTypes: [
-    { key: "Location",   label: "产地要求", options: ["", "福建", "山东", "浙江", "云南", "安徽", "四川", "广东"] },
+    { key: "Location",   label: "产地要求", options: ["", "三明", "南平", "宁德", "福州", "龙岩", "莆田", "泉州", "漳州", "厦门"] },
     { key: "Capability", label: "加工能力", options: ["", "制茶", "果蔬加工", "糕点制作", "酿造", "干货加工", "冷冻加工"] },
     { key: "Quality",    label: "品质认证", options: ["", "有机", "绿色", "地理标志", "无公害"] },
     { key: "Grade",      label: "等级要求", options: ["", "1", "2", "3", "4", "5"] },

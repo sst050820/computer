@@ -65,7 +65,7 @@ var VueQualifications = {
       {key:'Organic',label:'有机认证',icon:'fa-leaf',color:'#065f46',border:'#a7f3d0',shadow:'rgba(6,95,70,0.3)'},
     ],
     qualValues:{
-      Location:['福建','山东','浙江','云南','安徽','四川','广东'],
+      Location:['三明','南平','宁德','福州','龙岩','莆田','泉州','漳州','厦门'],
       Capability:['制茶','果蔬加工','糕点制作','酿造','干货加工','冷冻加工'],
       Quality:['有机','绿色','地理标志','无公害'],
       Grade:['1','2','3','4','5'],

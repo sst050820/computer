@@ -18,9 +18,7 @@ var PageRenderers = {
       { key: "grain", icon: "fa-wheat-alt", label: "谷物" },
       { key: "meat", icon: "fa-drumstick-bite", label: "畜牧" },
       { key: "snack", icon: "fa-cookie", label: "零食" },
-      { key: "oil", icon: "fa-oil-can", label: "粮油" },
       { key: "mushroom", icon: "fa-seedling", label: "菌菇" },
-      { key: "honey", icon: "fa-jar", label: "蜂蜜" },
     ];
     container.innerHTML =
       '<div class="tb-section">' +
@@ -38,7 +36,7 @@ var PageRenderers = {
       '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
       '<input id="searchKeyword" placeholder="搜索农产品名称..." style="flex:2;min-width:160px;" />' +
       '<select id="searchCategory" style="flex:1;min-width:100px;"><option value="">全部分类</option><option>茶叶</option><option>果蔬</option><option>谷物</option><option>畜牧</option></select>' +
-      '<select id="searchOrigin" style="flex:1;min-width:100px;"><option value="">全部产地</option><option>福建</option><option>山东</option><option>浙江</option><option>云南</option></select>' +
+      '<select id="searchOrigin" style="flex:1;min-width:100px;"><option value="">全部产地</option><option>三明</option><option>南平</option><option>宁德</option><option>福州</option><option>龙岩</option><option>莆田</option><option>泉州</option><option>漳州</option><option>厦门</option></select>' +
       '<button class="btn" id="searchBtn"><i class="fas fa-search"></i> 搜索</button></div></div>' +
       '<div class="tb-section-header"><h3>🔥 热销推荐</h3><a class="tb-more" href="#" onclick="App.navigate(\"discovery\");return false;">查看更多 ›</a></div>' +
       '<div id="productResults" class="tb-product-grid"></div></div>';
@@ -57,7 +55,7 @@ var PageRenderers = {
       if (!item) return;
       document.querySelectorAll(".tb-cat-item").forEach(function(el) { el.classList.remove("active"); });
       item.classList.add("active");
-      var catMap = { tea: "茶叶", fruit: "果蔬", grain: "谷物", meat: "畜牧", snack: "零食", oil: "粮油", mushroom: "菌菇", honey: "蜂蜜" };
+      var catMap = { tea: "茶叶", fruit: "果蔬", grain: "谷物", meat: "畜牧", snack: "零食", mushroom: "菌菇" };
       var cat = catMap[item.dataset.cat] || "";
       var catSelect = document.getElementById("searchCategory");
       if (catSelect) { catSelect.value = cat; }
@@ -71,14 +69,12 @@ var PageRenderers = {
         var data = res.data || [];
         if (data.length === 0) {
           data = [
-            { id: "s1", name: "武夷山大红袍", category: "茶叶", origin: "福建", price: 388, shop_name: "武夷茶庄", certification: "有机", traceable: true, image: "🍵", sales: 1256, rating: 4.8 },
-            { id: "s2", name: "安溪铁观音", category: "茶叶", origin: "福建", price: 268, shop_name: "安溪茶厂", certification: "地理标志", traceable: true, image: "🫖", sales: 2340, rating: 4.7 },
-            { id: "s3", name: "云南野生菌菇礼盒", category: "菌菇", origin: "云南", price: 168, shop_name: "云菌坊", certification: "绿色", traceable: true, image: "🍄", sales: 892, rating: 4.9 },
-            { id: "s4", name: "烟台红富士苹果", category: "果蔬", origin: "山东", price: 59.9, shop_name: "山东果园", certification: "无公害", traceable: true, image: "🍎", sales: 4521, rating: 4.6 },
-            { id: "s5", name: "龙井绿茶", category: "茶叶", origin: "浙江", price: 298, shop_name: "西湖龙井园", certification: "有机", traceable: true, image: "🌿", sales: 1876, rating: 4.8 },
-            { id: "s6", name: "有机五常大米", category: "谷物", origin: "黑龙江", price: 89.9, shop_name: "五常稻花香", certification: "有机", traceable: true, image: "🌾", sales: 6720, rating: 4.7 },
-            { id: "s7", name: "长白山椴树蜜", category: "蜂蜜", origin: "吉林", price: 128, shop_name: "长白山蜂场", certification: "绿色", traceable: true, image: "🍯", sales: 2341, rating: 4.5 },
-            { id: "s8", name: "内蒙古风干牛肉", category: "畜牧", origin: "内蒙古", price: 99, shop_name: "草原牧业", certification: "无公害", traceable: true, image: "🥩", sales: 3890, rating: 4.6 },
+            { id: "s1", name: "安溪铁观音", category: "茶叶", origin: "泉州", price: 298, shop_name: "泉州农产品", certification: "有机", traceable: true, image: "🍵", sales: 2340, rating: 4.8 },
+            { id: "s2", name: "古田油奈李", category: "果蔬", origin: "宁德", price: 45, shop_name: "宁德农产品", certification: "无公害", traceable: true, image: "🫐", sales: 5600, rating: 4.7 },
+            { id: "s3", name: "三明红菇", category: "菌菇", origin: "三明", price: 188, shop_name: "三明农产品", certification: "绿色", traceable: true, image: "🍄", sales: 1200, rating: 4.9 },
+            { id: "s4", name: "福州茉莉花茶", category: "茶叶", origin: "福州", price: 198, shop_name: "福州农产品", certification: "绿色", traceable: true, image: "🍵", sales: 4500, rating: 4.8 },
+            { id: "s5", name: "建宁莲子", category: "谷物", origin: "三明", price: 148, shop_name: "三明农产品", certification: "绿色", traceable: true, image: "🌾", sales: 3200, rating: 4.7 },
+            { id: "s6", name: "莆田荔枝", category: "果蔬", origin: "莆田", price: 88, shop_name: "莆田农产品", certification: "绿色", traceable: true, image: "🍒", sales: 6700, rating: 4.6 },
           ];
         }
         var cards = data.map(function(p) { return ProductCard.render(p); }).join("");
