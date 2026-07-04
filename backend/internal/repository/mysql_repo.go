@@ -501,6 +501,52 @@ func GetDemandMarket(merchantID string) ([]*model.CustomOrder, error) {
 // ==================== Seed Data ====================
 
 func SeedDemoData() {
+	// 确保所有表存在（便携版 MySQL 需要首次建表）
+	DB.Exec(`CREATE TABLE IF NOT EXISTS users (
+		id VARCHAR(32) PRIMARY KEY, username VARCHAR(64) UNIQUE, password VARCHAR(64),
+		name VARCHAR(128), role VARCHAR(32), phone VARCHAR(32), location VARCHAR(64),
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	)`)
+	DB.Exec(`CREATE TABLE IF NOT EXISTS products (
+		id VARCHAR(32) PRIMARY KEY, name VARCHAR(128), category VARCHAR(32),
+		origin VARCHAR(32), price DECIMAL(10,2), image VARCHAR(256),
+		certification VARCHAR(32), traceable TINYINT(1) DEFAULT 1,
+		shop_id VARCHAR(32), shop_name VARCHAR(128),
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	)`)
+	DB.Exec(`CREATE TABLE IF NOT EXISTS qualifications (
+		id VARCHAR(32) PRIMARY KEY, holder_id VARCHAR(32), holder_name VARCHAR(128),
+		qual_type VARCHAR(32), qual_value VARCHAR(64), status VARCHAR(32) DEFAULT 'pending',
+		certifier_id VARCHAR(32), certifier_name VARCHAR(128),
+		issued_at DATETIME, expires_at VARCHAR(32),
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	)`)
+	DB.Exec(`CREATE TABLE IF NOT EXISTS custom_orders (
+		id VARCHAR(32) PRIMARY KEY, title VARCHAR(256), description TEXT,
+		budget VARCHAR(64), policy VARCHAR(256), session_id VARCHAR(128),
+		ciphertext TEXT, consumer_id VARCHAR(32), consumer_name VARCHAR(128),
+		contact VARCHAR(512), address VARCHAR(512),
+		status VARCHAR(32) DEFAULT 'active', created_at VARCHAR(32)
+	)`)
+	DB.Exec(`CREATE TABLE IF NOT EXISTS order_responses (
+		id VARCHAR(32) PRIMARY KEY, order_id VARCHAR(32), merchant_id VARCHAR(32),
+		name VARCHAR(128), price VARCHAR(64), message TEXT,
+		created_at VARCHAR(32)
+	)`)
+	DB.Exec(`CREATE TABLE IF NOT EXISTS orders (
+		id VARCHAR(32) PRIMARY KEY, consumer_id VARCHAR(32), consumer_name VARCHAR(128),
+		merchant_id VARCHAR(32), merchant_name VARCHAR(128),
+		product_id VARCHAR(32), product_name VARCHAR(128),
+		quantity INT, price DECIMAL(10,2), total DECIMAL(10,2),
+		status VARCHAR(32) DEFAULT 'pending', remark TEXT,
+		created_at VARCHAR(32)
+	)`)
+	DB.Exec(`CREATE TABLE IF NOT EXISTS archive_nodes (
+		id INT AUTO_INCREMENT PRIMARY KEY, product_id VARCHAR(32),
+		step VARCHAR(64), location VARCHAR(256), node_time VARCHAR(32),
+		description TEXT, is_public TINYINT(1) DEFAULT 1
+	)`)
+
 	// Check each table independently
 	userCount := 0
 	prodCount := 0

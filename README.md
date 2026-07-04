@@ -1,136 +1,296 @@
-# 农禾坊 — 智慧农业隐私追溯平台
+# 农禾坊 — 基于属性基加密（ABE）的智慧农业隐私追溯平台
 
-基于**属性基加密（ABE）**和**区块链**的农产品隐私追溯平台——消费者用加密条件发布需求，只有持有匹配资质的商家才能解密查看。
+## 一、项目概述
 
-## 快速开始
+农禾坊是一个面向福建省特色农产品的在线交易平台。与传统电商平台不同，农禾坊的核心亮点在于引入了高级密码学算法——**属性基加密（Attribute-Based Encryption, ABE）**，为消费者提供**隐私定向发布**功能：消费者可以用条件（如"产地=福州 + 加工能力=制茶"）加密自己的定制需求，只有持有匹配资质的商家才能解密查看完整需求描述，不满足条件的商家只能看到需求标题，无法得知消费者的具体要求和预算。
+
+本项目不仅是电商平台，更是一个**ABE 密码学算法在农业供应链场景中的创新应用实践**。它展示了如何将前沿密码学技术引入农产品供需撮合流程，在保护消费者隐私的同时实现高效的定向发布与精准匹配。
+
+## 二、技术架构
+
+### 2.1 总体架构
+
+项目采用五层架构设计：
+
+| 层级 | 技术选型 | 职责 |
+|------|--------|------|
+| 前端展示层 | Vue 3 CDN + 原生 HTML/CSS/JS | SPA 应用，28 个页面组件，森林绿现代简约设计 |
+| 后端服务层 | Go 1.25+ + Gin 框架 | ~45 条 API 路由，ABE 加解密调度，业务逻辑处理 |
+| 数据存储层 | MySQL 8.0（Docker 容器化部署） | 7 张表，持久化用户、商品、订单、资质、需求等业务数据 |
+| 密码学服务层 | Java 17 + JPBC库 | MAFASAC-AR 加密方案，5 个 REST 端点，全局共享 GPP 架构 |
+| 区块链追溯层（可选） | Hyperledger Fabric 2.3 + Go 链码 | 产品追溯记录的哈希指纹上链，保证数据不可篡改 |
+
+### 2.2 ABE 密码学方案
+
+本项目的核心算法是 **MAFASAC-AR**（Multi-Authority Fully Secure Attribute-Based Encryption with Access Control and Attribute Revocation）。
+
+**数学基础**：
+- 复合阶双线性群（Composite-Order Bilinear Groups），群阶 N = p1p2p3
+- Type A1 椭圆曲线，256-bit 安全级别
+- LSSS（线性秘密共享方案）访问结构，使用 Vandermonde 矩阵
+
+**ABE 服务架构**：
+- Java 密码学服务独立运行在 8081 端口，提供 5 个 HTTP 端点
+- 采用**全局共享 GPP（Global Public Parameters）架构**：启动时创建单例 GPP 和 5 个属性授权方（AA），所有加密会话共用同一套系统参数
+- **撤销/轮换的全局生效**：当审核方收回资质或管理员轮换密钥时，直接调用 `globalP4.SysUpd()` 更新全局 GPP.RP 参数，所有会话的旧密钥立刻失效
+- 加密端点支持**动态 LSSS 矩阵维度**：`POST /api/encrypt?n=N`，消费者选择 N 个条件就生成 N×N Vandermonde 矩阵
+
+**5 个密码学端点**：
+
+| 端点 | 功能 | 密码学操作 |
+|------|------|----------|
+| `POST /api/encrypt?n=N` | ABE 加密 | KeyGen + Enc（N×N LSSS 矩阵） |
+| `POST /api/decrypt` | ABE 解密验证 | 动态属性重生成密钥，然后 Dec 和 validDec |
+| `POST /api/revoke` | 属性撤销 | SysUpd（全局公钥参数更新） |
+| `POST /api/rekey` | 系统密钥轮换 | SysUpd（同撤销，触发全局过期） |
+| `POST /api/reencrypt` | 密文重加密 | CTUpd（旧密文适配新密钥参数） |
+
+### 2.3 核心业务流程
+
+**ABE 加密发布流程**：
+1. 消费者在「私人定制」页面填写需求标题、描述、预算、联系方式和快递地址
+2. 从 5 种条件类型（Location/Capability/Quality/Grade/Organic）中选择访问条件
+3. 后端将条件转换为 ABE 策略表达式，如 `(Location=福州, Capability=制茶; 2)`
+4. Go 后端调用 Java ABE 服务的 `/api/encrypt?n=2` 加密需求描述、联系方式和快递地址
+5. 密文和 session ID 存入 MySQL `custom_orders` 表
+
+**ABE 解密验证流程**：
+1. 商家在「需求市场」页面看到加密需求卡片
+2. 点击「ABE 解密验证」按钮
+3. 后端获取商家有效资质（active 状态的 qualifications）
+4. Go 后端调用 Java ABE 服务的 `/api/decrypt`，传入密文和商家属性
+5. Java 服务动态解析属性数量，重新生成用户密钥，执行 Dec 和 validDec
+6. 解密成功返回解密原文（含联系方式、地址）；解密失败降级到 MatchAttributes 字符串匹配
+
+**属性撤销流程**：
+1. 审核方在「资质管理」页面收回某商家的资质
+2. 数据库标记 status='revoked'
+3. Go 后端调用 Java ABE 的 `/api/revoke`
+4. `globalP4.SysUpd()` 更新全局公钥参数
+5. 该商家持有的旧属性密钥全部失效，无法再解密任何需求
+
+**密钥轮换流程**：
+1. 管理员在「规则管理」页面点击「更新认证规则」
+2. Go 后端调用 Java ABE 的 `/api/rekey`
+3. `globalP4.SysUpd()` 生成新系统主密钥
+4. 数据库所有 active 资质变为 expired
+5. 所有商家必须重新申请资质后才能解密需求
+
+## 三、五角色权限模型
+
+农禾坊设计了五类用户角色，每个角色在 ABE 系统中都有明确的对应概念和职责：
+
+| 角色 | ABE 对应 | 核心功能 | 账号数 |
+|------|---------|--------|--------|
+| 消费者 | DataOwner（数据所有者） | 浏览商品、发布加密定制需求、接受报价、购物下单 | 1 |
+| 商家 | DataUser（数据用户） | 管理商品、解密查看需求、报价接单、订单处理 | 9 |
+| 审核方 | AttributeAuthority（属性授权方） | 管辖特定属性类型，颁发/撤销/续期资质 | 2 |
+| 管理员 | 超级用户 | 全局管理、用户和内容审核、纠纷处理、系统密钥轮换 | 1 |
+| 监管方 | 审计者 | 产品追溯查询、应急解密、商家合规检查 | 1 |
+
+**商家端完整操作流程**：工作台（数据统计）→ 商品管理（发布/编辑/下架/图片显示）→ 需求市场（资质匹配/ABE 解密验证/接单报价/已报价防重复标记）→ 订单管理（确认接单/发货/标记送达/完成/取消/删除/详情弹窗）→ 资质申请（5 种类型全可选）
+
+**消费者端完整操作流程**：发现好物（30 种福建农产品搜索/筛选/图片浏览/加入购物车）→ 购物车（数量增减/删除/结算支付）→ 我的订单（详情弹窗/订单进度条/取消订单/再次购买）→ 私人定制（5 种 ABE 条件/加密发布/联系方式必填/快递地址必填）→ 我的需求（查看商家响应/接受报价生成订单/自动消息通知）
+
+**审核方端操作流程**：审核管理（待审核资质列表/通过或拒绝/管辖范围检查）→ 审核历史（已处理记录）→ 资质管理（收回触发 ABE 撤销/续期/恢复）
+
+## 四、福建农产品数据
+
+平台预置了完整的福建省 9 个地级市的 30 种特色农产品，配有真实 JPG 照片：
+
+| 地级市 | 商家账号 | 产品 |
+|--------|--------|------|
+| 三明 | `sanming` | 白背木耳、红菇、翠冠梨、莲子、大田雪蔗 |
+| 南平 | `nanping` | 丹桂茶、熏鹅、武夷山竹荪、建阳桔柚 |
+| 宁德 | `ningde` | 穆阳水蜜桃、屏南芙蓉李、古田油奈李 |
+| 福州 | `fuzhou` | 茉莉花茶、鱼丸、永泰李干、永泰青梅、闽清橄榄 |
+| 龙岩 | `longyan` | 柿饼、花生 |
+| 莆田 | `putian` | 白梨枇杷、荔枝、龙眼 |
+| 泉州 | `quanzhou` | 安溪铁观音 |
+| 漳州 | `zhangzhou` | 杨桃、杨梅、沃柑、莲雾、平和蜜柚 |
+| 厦门 | `xiamen` | 土笋冻、树葡萄 |
+
+产品涵盖 6 大分类：茶叶、果蔬、谷物、畜牧、菌菇、零食。
+
+## 五、核心创新点
+
+### 5.1 ABE 在农业电商场景的创新应用
+
+传统农业电商平台存在两个长期困扰的痛点。第一，消费者的定制需求（如"需要福建本地的制茶厂代工 200 斤有机铁观音茶饼"）通常只能公开发布，这意味着具体需求描述、期望预算、联系方式和快递地址等敏感信息对所有商家完全透明。在传统模式下，即使商家根本不具备"福建本地"和"制茶能力"等条件，也能随意查看消费者隐私，甚至恶意竞争对手可以伪装成消费者来套取商业情报。第二，供需匹配效率低下——消费者发布需求后需要等待商家主动联系，而商家则需要花费大量时间在海量公开展示的需求中人工筛选自己能满足的项目。
+
+农禾坊通过将 **ABE 属性基加密** 引入农产品供需撮合流程，从根本上解决了这两个问题：
+
+- **定向发布**：消费者在发布需求时设定访问条件（如 Location=福建, Capability=制茶），平台将这些条件转换为 ABE 策略表达式 `(Location=福建, Capability=制茶; 2)`，然后用该策略对需求描述进行加密。密文存储在 MySQL 数据库中，策略表达式公开可见，但原文只有通过 ABE 解密验证的商家才能查看。
+
+- **精准匹配**：系统自动检测每个商家的有效资质，将资质与需求策略进行匹配。在需求市场中，商家可以看到所有公开需求，但系统会明确标记哪些需求在自己资质范围内可解密，哪些超出范围。持有匹配属性密钥的商家点击"ABE 解密验证"按钮，Java 密码学服务动态生成用户密钥，执行解密运算，返回原文内容和不满足条件的商家则直接看到"资质不满足"的拒绝提示和具体的不满足条目。
+
+- **隐私保护**：需求标题和预算对所有人公开，但需求详细描述、消费者联系方式、快递地址均被 ABE 密文保护，以加密形式存储在数据库的 `custom_orders.ciphertext` 字段中。即使数据库管理员查看数据表，也只能看到不可读的密文和对应的策略表达式。
+
+### 5.2 密码学意义上的真正属性撤销
+
+当前大多数声称"支持 ABE"的演示系统中，所谓的"属性撤销"实际上只是在前端把资质状态从"有效"改为"已收回"，而密码学层面没有任何动作——也就是说，被收回资质的商家实际上依然能用旧密钥解密新发布的加密需求。这是因为这些系统每次加密都创建独立的全局参数实例，各会话之间的密钥互不影响。
+
+本项目实现了**密码学意义上的真正属性撤销**，核心机制是 **全局共享 GPP（Global Public Parameters）架构**：
+
+- Java ABE 密码学服务启动时创建唯一的单例 `globalP4` 对象，执行 `GlobalSetup()` 生成全局公钥参数 GPP，执行 `AuthSetup(5)` 创建 5 个属性授权方（分别对应 Location、Capability、Quality、Grade、Organic 五个属性）。所有后续加密会话的 MAFASACAR 实例都通过 `p4.GPP = globalP4.GPP` 和 `p4.AA = globalP4.AA` 共享同一套系统参数。
+
+- 当审核方对某商家执行"收回资质"操作时，前端调用 `POST /api/qualifications/:id/revoke`，后端在数据库中将资质状态标记为 `revoked`，同时调用 Java ABE 服务的 `POST /api/revoke` 端点。该端点执行 MAFASACAR 算法中的 `SysUpd()` 函数，更新全局 GPP 对象中的随机参数 RP（Random Parameter）。由于所有会话的 GPP 对象都指向同一个内存地址，RP 参数的变更会在所有会话中同步生效。
+
+- RP 参数更新后，新加密的密文使用新 RP 参数生成，而已持有旧密钥的商家在执行 `Dec()` 时，由于密钥对应的 RP 与当前 GPP 的 RP 不匹配，`validDec()` 函数返回 `false`，解密失败。这种设计保证了 **"撤销即生效"**——被收回资质的商家立即丧失对该属性相关需求的解密能力，无需等待用户重新登录、无需手动触发系统重启。
+
+- 撤销操作支持**细粒度控制**：审核方可以根据具体资质项（如"Location=福建"）单独撤销，也可以批量撤销某商家的所有资质。每次撤销都会触发 SysUpd，更新全局参数，而被撤销的只是特定属性，其他未被撤销属性的商家不受影响。
+
+### 5.3 三层优雅降级策略
+
+在实际部署中，ABE 密码学服务（Java 进程）可能因为各种原因不可用：JPBC 库的椭圆曲线参数文件加载失败、端口 8081 被占用、Java 运行时内存不足等。为了保证核心业务流程不因密码学服务的偶发故障而中断，系统设计了三层降级策略：
+
+- **第一层：ABE 密码学加密/解密**。这是系统的正常运作模式。消费者发布需求时，Go 后端通过 HTTP 调用 Java ABE 服务的 `/api/encrypt?n=N` 端点，得到 `{"id":"session-uuid","status":"encrypted"}` 响应，将会话 ID 和完整响应体（作为密文）存入数据库。商家解密时，Go 后端调用 `/api/decrypt` 端点，Java 服务解析商家属性数量，重新生成用户密钥，执行 `Dec()` 和 `validDec()`，返回解密原文或拒绝状态。这是唯一能实现密码学意义上可信访问控制的模式。
+
+- **第二层：属性字符串匹配降级**。当 Java ABE 解密服务返回错误（连接拒绝、超时、404、500 等任何非 200 状态码）时，Go 后端的 `DecryptWithABE()` 函数返回 error，调用方的 handler 自动切入降级模式：解析 ABE 策略表达式 `(Location=福建, Capability=制茶; 2)`，将其中的属性条件与商家持有的有效资质进行逐个字符串匹配。全部条件都满足则返回原文，任一条件不满足则拒绝。这一层的安全性弱于第一层（依赖简单的字符串比较而非密码学验证），但保证了在 ABE 服务不可用时业务不中断。
+
+- **第三层：加密降级为明文**。当 Java ABE 加密服务不可用时，`EncryptWithABE()` 函数返回明文作为"密文"，session ID 使用时间戳生成。需求描述以明文形式存入数据库，相当于暂时关闭了 ABE 保护。当 ABE 服务恢复后，新的加密需求会走第一层正常流程，旧明文需求保持可读状态。撤销操作在降级模式下仅做数据库标记（status='revoked'），并通过前端提示"系统密钥更新后生效"告知审核方等待 ABE 服务恢复。
+
+### 5.4 动态 LSSS 矩阵维度
+
+ABE 加密的核心数据结构是 LSSS（线性秘密共享方案）访问矩阵。在 MAFASAC-AR 算法中，LSSS 矩阵采用 Vandermonde 形式，维度由条件数量决定：消费者选择 N 个条件，矩阵就是 N×N。
+
+本项目的加密端点设计为 `POST /api/encrypt?n=N`，将条件数量 N 作为 URL 查询参数传递给 Java 密码学服务。Java 服务解析 n 参数后，调用 `p4.KeyGen(p4.GPP, 0, n)` 生成 n 个属性的用户密钥，调用 `p4.Enc(p4.GPP, n, n)` 使用 n×n LSSS 矩阵加密。这种设计保证了矩阵维度随条件数量自适应变化：消费者选择 1 个条件就用 1×1 矩阵，选择 5 个条件就用 5×5 矩阵，避免了固定维度带来的安全性损失。
+
+解密端同样采用动态属性处理：Java 服务从请求体中解析 `attributes` 字段，通过 `countAttributes()` 函数统计商家实际拥有的属性数量，然后调用 `p4.KeyGen(p4.GPP, 0, attrCount)` 重新生成与之匹配的用户密钥，再执行解密。这保证了只有当商家属性数量大于等于 LSSS 矩阵维度时，解密才有可能成功。
+
+### 5.5 完整的多端操作闭环
+
+许多学术性的 ABE 演示系统只实现了"加密→解密"的最简链路，缺乏完整的用户交互流程。农禾坊围绕 ABE 核心能力，构建了覆盖五个角色、前后端打通的操作闭环：
+
+- **消费者全流程**：发现好物（28 个页面组件、30 种福建农产品、分类筛选、产地搜索、图片浏览、加入购物车）→ 购物车管理（数量加减、删除、结算支付弹窗、查看订单跳转）→ 我的订单（订单详情弹窗、状态进度条：待确认→已接单→已发货→已送达→已完成、取消订单、再次购买一键加入购物车）→ 私人定制（5 种 ABE 条件选择器、条件转策略表达式实时预览、联系方式必填、快递地址必填、加密发布）→ 我的需求（查看商家响应、点击响应卡片弹出详情、接受报价自动生成采购订单并更新需求状态为"已接受"、自动创建消息通知）→ 消息中心（订单变更自动通知、未读红点徽章）。
+
+- **商家全流程**：工作台仪表盘（商品数/匹配需求数/有效资质数三指标）→ 商品管理（发布新商品弹窗、编辑商品信息、商品卡片支持真实图片和 emoji 双重模式、下架确认）→ 需求市场（资质自动匹配标记、ABE 解密验证按钮、解密成功展示原文含联系方式和地址、接单报价弹窗、已报价防止重复标记）→ 订单管理（订单详情弹窗、确认接单/发货/标记送达/完成订单/取消订单/删除已完成订单六种状态流转、操作栏专用区域）→ 我的资质（有效/待审核/已失效分类展示、5 种属性类型全可选申请弹窗、类型按钮式选择器+值按钮式选择器两步确认、预览区实时显示即将申请的资质）。
+
+- **审核方全流程**：审核管理（待审核列表、申请人信息/资质类型中文显示/资质值/管辖匹配标识、通过和拒绝双重确认弹窗、管辖范围越权拦截）→ 审核历史（已处理记录列表）→ 资质管理（全平台资质表格、收回按钮触发 ABE SysUpd 密码学撤销、续期弹窗输入新到期日期、恢复按钮、操作结果反馈提示）。
+
+- **管理员全流程**：用户管理（表格+搜索+角色徽标、查看详情弹窗、禁用/启用、删除消费者和商家）→ 审核方管理（审核方列表含管辖类型和已颁发资质数、详情弹窗含资质清单）→ 规则管理（认证规则版本号+最后更新时间、一键更新触发 ABE Rekey 密钥轮换、系统主密钥更新后所有旧资质自动过期）→ 内容审核（商品和定制需求两个表格、通过和删除按钮接入真实 DELETE API、确认弹窗）→ 纠纷处理（从真实订单数据生成纠纷列表、详情弹窗含纠纷时间线、裁决按钮）。
+
+- **监管方全流程**：产品档案查询（下拉选择产品、全链路追溯时间线含公开节点和加密节点区分）→ 商家合规检查（商家列表含资质数量和合规状态判定、详情弹窗含资质清单和判定结论）→ 商品抽检（随机抽取 5 件商品展示追溯档案统计面板）→ 应急处理（红色警告区域、确认应急解密操作可查阅加密节点内容）。
+
+### 5.6 ABE 服务与业务层的松耦合设计
+
+Go 后端通过环境变量配置 Java ABE 服务的地址，业务代码中所有 ABE 调用均通过 `service` 包的六个函数（`EncryptWithABE`、`DecryptWithABE`、`RevokeAttribute`、`UpdateSystemKeys`、`ReEncryptContent`、`ConditionToPolicy`）完成。这种松耦合设计带来了三个好处：一是可以在不修改业务代码的情况下更换 ABE 算法实现（只需修改 service 包中的 HTTP 调用逻辑）；二是每个 ABE 函数内部都实现了超时控制（5 秒）和错误处理，故障不会向上层传播；三是支持通过环境变量灵活切换 ABE 服务地址，方便在不同环境下使用不同的密码学服务实例。
+
+## 六、开发环境与部署
+
+### 6.1 环境要求
+
+| 组件 | 版本 | 必要性 |
+|------|------|--------|
+| Docker | 20.10 以上 | 必需（MySQL 容器化运行） |
+| Go | 1.25 以上 | 必需（后端编译） |
+| Java | 17 以上 | 必需（ABE 密码学服务） |
+| Hyperledger Fabric | 2.3 | 可选（区块链追溯功能，不可用时自动跳过） |
+
+### 6.2 一键启动
 
 ```bash
-# 1. 启动 MySQL（Docker）
-docker start mysql-fruit 2>/dev/null || docker run -d --name mysql-fruit \
-  -e MYSQL_ROOT_PASSWORD=123456 -e MYSQL_DATABASE=fruit_platform \
-  -p 3306:3306 mysql:8.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+# 第一步：启动 MySQL
+docker start mysql-fruit || docker run -d --name mysql-fruit -e MYSQL_ROOT_PASSWORD=123456 -e MYSQL_DATABASE=fruit_platform -p 3306:3306 mysql:8.0 --character-set-server=utf8mb4
 
-# 2. 启动 Java ABE 密码学服务 (:8081)
-cd ~/program/crypto_service
-java -cp "lib/*:classes" CryptoServer &
+# 第二步：启动 Java ABE 密码学服务
+cd ~/program/crypto_service && java -cp "lib/*:classes" CryptoServer &
 
-# 3. 启动 Go 后端 (:8080)
-cd ~/program/backend
-go build -o server . && nohup ./server > /tmp/server.log 2>&1 &
+# 第三步：编译并启动 Go 后端
+cd ~/program/backend && go build -o server . && nohup ./server > ../logs/backend.log 2>&1 &
+
+# 第四步：浏览器访问 http://localhost:8080
+```
+
+### 6.3 服务端口
+
+| 服务 | 端口 |
+|------|------|
+| Go 后端 + 前端静态文件托管 | 8080 |
+| Java ABE 密码学服务 | 8081 |
+| MySQL 数据库 | 3306 |
+
+## 七、项目统计
+
+| 指标 | 数值 |
+|------|------|
+| 前端页面组件 | 28 个 Vue 组件 |
+| 后端 API 路由 | 约 45 条 |
+| 数据库表 | 7 张 |
+| 预置用户 | 21 个 |
+| 预置商品 | 30 种福建农产品（配真实照片） |
+| 预置资质 | 21 项 |
+| ABE 密码学端点 | 5 个 |
+| 代码总行数 | 约 10000 行 |
+| 项目文件 | 约 65 个源文件 |
+
+## 八、全部账号
+
+所有密码均为 `123456`（管理员为 `admin123`）。
+
+| 角色 | 用户名 | 姓名 | 说明 |
+|------|--------|------|------|
+| 消费者 | `shike` | 陈食客 | 浏览商品、发布定制需求、下单 |
+| 三明商家 | `sanming` | 三明农产品 | 5 产品 |
+| 南平商家 | `nanping` | 南平农产品 | 4 产品 |
+| 宁德商家 | `ningde` | 宁德农产品 | 3 产品 |
+| 福州商家 | `fuzhou` | 福州农产品 | 5 产品 |
+| 龙岩商家 | `longyan` | 龙岩农产品 | 2 产品 |
+| 莆田商家 | `putian` | 莆田农产品 | 3 产品 |
+| 泉州商家 | `quanzhou` | 泉州农产品 | 1 产品（安溪铁观音）|
+| 漳州商家 | `zhangzhou` | 漳州农产品 | 5 产品 |
+| 厦门商家 | `xiamen` | 厦门农产品 | 2 产品 |
+| 审核方 | `fujiangongshang` | 福建省工商认证中心 | 管辖 Location、Grade |
+| 审核方 | `youjirenzheng` | 有机食品认证协会 | 管辖 Quality、Capability、Organic |
+| 管理员 | `admin` | 平台管理员 | 密码 `admin123` |
+| 监管方 | `shiyaojian` | 食品药品监管局 | 追溯审查、应急解密 |
+
+## 九、快速启动
+
+```bash
+# 1. MySQL
+docker start mysql-fruit || docker run -d --name mysql-fruit -e MYSQL_ROOT_PASSWORD=123456 -e MYSQL_DATABASE=fruit_platform -p 3306:3306 mysql:8.0 --character-set-server=utf8mb4
+
+# 2. Java ABE
+cd crypto_service && java -cp "lib/*:classes" CryptoServer &
+
+# 3. Go 后端
+cd backend && go build -o server . && nohup ./server > ../logs/backend.log 2>&1 &
 
 # 4. 浏览器访问 http://localhost:8080
 ```
 
-## 账号
+服务端口：Go 后端 8080 | Java ABE 8081 | MySQL 3306
 
-### 消费者
-| 用户名 | 密码 | 姓名 |
-|--------|------|------|
-| `shike` | `123456` | 陈食客 |
+## 十、API 接口一览（~45 条）
 
-### 商家（9 个福建市级商家，密码均为 `123456`）
+### 认证
+`POST /api/auth/login` `POST /api/auth/register` `PUT /api/user/profile`
 
-| 用户名 | 商家名 | 地区 | 产品数 |
-|--------|--------|------|--------|
-| `sanming` | 三明农产品 | 三明（含大田、建宁） | 5 |
-| `nanping` | 南平农产品 | 南平（含武夷山、建阳） | 4 |
-| `ningde` | 宁德农产品 | 宁德（含福安、屏南、古田） | 3 |
-| `fuzhou` | 福州农产品 | 福州（含永泰、闽清） | 5 |
-| `longyan` | 龙岩农产品 | 龙岩 | 2 |
-| `putian` | 莆田农产品 | 莆田 | 3 |
-| `quanzhou` | 泉州农产品 | 泉州（含安溪） | 1 |
-| `zhangzhou` | 漳州农产品 | 漳州（含平和） | 5 |
-| `xiamen` | 厦门农产品 | 厦门 | 2 |
+### 商品
+`GET /api/products` `GET /api/products/:id` `POST /api/products` `PUT /api/products/:id` `DELETE /api/products/:id` `GET /api/my-products`
 
-### 审核方、管理员、监管方
+### ABE 加密定制需求
+`POST /api/custom-order` `GET /api/custom-orders` `GET /api/custom-orders/:id` `POST /api/custom-orders/:id/respond` `POST /api/custom-orders/:id/decrypt` `DELETE /api/custom-orders/:id` `PUT /api/custom-orders/:id/status` `GET /api/public-orders`
 
-| 角色 | 用户名 | 密码 | 管辖 |
-|------|--------|------|------|
-| 🏛️ 审核方 | `fujiangongshang` | `123456` | Location、Grade |
-| 🏛️ 审核方 | `youjirenzheng` | `123456` | Quality、Capability、Organic |
-| ⚙️ 管理员 | `admin` | `admin123` | 全局管理 |
-| 🔍 监管方 | `shiyaojian` | `123456` | 追溯审查、应急解密 |
+### 购买订单
+`POST /api/orders` `GET /api/merchant/orders` `GET /api/consumer/orders` `PUT /api/orders/:id/status` `DELETE /api/orders/:id` `GET /api/admin/purchase-orders`
 
-## 技术栈
+### 资质与审核
+`GET /api/my-qualifications` `POST /api/qualifications/apply` `POST /api/qualifications/:id/revoke` `PUT /api/qualifications/:id/renew` `PUT /api/qualifications/:id/restore` `GET /api/review-list` `POST /api/review/:id/approve` `POST /api/review/:id/reject`
 
-| 层 | 技术 | 说明 |
-|----|------|------|
-| 前端 | Vue 3 CDN + 原生 HTML/CSS/JS | 无构建工具 SPA，28 个页面组件 |
-| 后端 | Go 1.25+ + Gin | ~45 条 API 路由 |
-| 数据库 | MySQL 8.0（Docker） | 21 用户 + 30 商品 + 21 资质 |
-| 密码学 | Java 17 + JPBC | MAFASAC-AR，复合阶双线性群 |
-| 区块链 | Hyperledger Fabric 2.3 | 追溯链码（可选组件） |
-| ABE 方案 | 全局共享 GPP + 动态 LSSS | 加密/解密/撤销/轮换/重加密 |
+### 管理员
+`GET /api/admin/users` `DELETE /api/admin/users/:id` `GET /api/admin/qualifications` `GET /api/admin/orders` `GET /api/admin/disputes` `POST /api/admin/sys-update`
 
-## ABE 密码学服务（5 个端点）
+### 监管方
+`GET /api/regulator/search` `POST /api/regulator/emergency` `GET /api/archive/:productId` `GET /api/demand-market`
 
-Java ABE 服务 (`:8081`) 使用全局共享 GPP 架构：
+## 十一、ABE 密码学端点（Java :8081）
 
 | 端点 | 说明 |
 |------|------|
-| `POST /api/encrypt?n=N` | 加密，N = 条件数量 |
-| `POST /api/decrypt` | 解密（动态属性密钥生成） |
-| `POST /api/revoke` | 属性撤销（SysUpd 全局公钥更新） |
-| `POST /api/rekey` | 密钥轮换（SysUpd） |
-| `POST /api/reencrypt` | 重加密（CTUpd） |
-
-## 项目结构
-
-```
-program/
-├── frontend/              # Vue 3 SPA 前端
-│   ├── index.html         # App 壳
-│   ├── css/app.css        # 森林绿设计系统
-│   ├── public/images/     # 30 张福建农产品图片
-│   └── js/
-│       ├── api.js / app.js / vue-app.js
-│       ├── components/    # 12 个基础组件
-│       └── pages/vue/     # 28 个页面组件
-├── backend/               # Go 后端 (:8080)
-│   ├── main.go
-│   └── internal/
-│       ├── handler/       # HTTP 处理器
-│       ├── service/       # ABE 加解密服务
-│       ├── repository/    # MySQL + Fabric 数据访问
-│       ├── model/         # 数据模型
-│       ├── middleware/    # CORS + 缓存控制
-│       └── router/        # ~45 条路由
-├── chaincode/             # Fabric 追溯链码
-├── crypto_service/        # Java ABE 密码学服务 (:8081)
-├── scripts/               # 运维脚本
-├── deploy/                # 部署配置
-└── docs/                  # 项目文档 + Obsidian
-```
-
-## 数据库
-
-| 表 | 内容 |
-|----|------|
-| `users` | 21 个用户（9 商家 + 1 消费者 + 2 审核方 + 1 管理员 + 1 监管方） |
-| `products` | 30 种福建农产品（含图片路径） |
-| `qualifications` | 21 项资质 |
-| `custom_orders` | 定制需求（ABE 加密存储） |
-| `orders` | 购买订单（含 merchant_name） |
-| `order_responses` | 商家报价（防重复） |
-| `archive_nodes` | 产品追溯档案 |
-
-## 环境变量
-
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `DB_HOST/PORT/USER/PASSWORD/NAME` | `127.0.0.1/3306/root/123456/fruit_platform` | MySQL |
-| `BACKEND_PORT` | `8080` | 后端端口 |
-| `ABE_SERVICE_URL` | `http://localhost:8081/api/encrypt` | 加密 |
-| `ABE_DECRYPT_URL` | `http://localhost:8081/api/decrypt` | 解密 |
-| `ABE_REVOKE_URL` | `http://localhost:8081/api/revoke` | 撤销 |
-| `ABE_REKEY_URL` | `http://localhost:8081/api/rekey` | 轮换 |
-| `ABE_REENCRYPT_URL` | `http://localhost:8081/api/reencrypt` | 重加密 |
-| `FRONTEND_ROOT` | `~/program/frontend` | 前端路径 |
-
-## 文档
-
-- [系统架构](docs/architecture.md)
-- [角色设计](docs/role-design.md)
-- [ABE 策略映射](docs/abe-mapping.md)
-- [API 接口文档](docs/api-reference.md)
-- [Obsidian 知识库](docs/obsidian/农禾坊-MOC.md)
+| `POST /api/encrypt?n=N` | 加密，N=条件数→N×N LSSS 矩阵 |
+| `POST /api/decrypt` | 解密，动态属性密钥生成 |
+| `POST /api/revoke` | 属性撤销，SysUpd 全局公钥更新 |
+| `POST /api/rekey` | 密钥轮换，SysUpd |
+| `POST /api/reencrypt` | 重加密，CTUpd |
