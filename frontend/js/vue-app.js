@@ -58,7 +58,6 @@ var VueApp = createApp({
         { key:'user-management', icon:'fa-users', label:'用户管理' },
         { key:'certifier-management', icon:'fa-building', label:'审核方管理' },
         { key:'rule-management', icon:'fa-gear', label:'规则管理' },
-        { key:'content-audit', icon:'fa-eye', label:'内容审核' },
         { key:'dispute', icon:'fa-gavel', label:'纠纷处理' },
         { key:'reports', icon:'fa-file-alt', label:'数据报表' },
       ],

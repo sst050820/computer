@@ -124,7 +124,7 @@ const VueDiscovery = {
     getEmoji: function(p) { if (p.image && p.image.length <= 4) return p.image; return this.emojiMap[p.category] || '📦'; },
  getImgSrc: function(p) { if (p.image && p.image.length > 6) return p.image; return null; },
     addToCart: function(p) {
-      var img = this.getEmoji(p);
+      var img = p.image || this.getEmoji(p);
       window.App.addToCart({ id: p.id, name: p.name, price: p.price, image: img, shop_id: p.shop_id, shop_name: p.shop_name });
     },
     viewDetail: function(p) { this.detailProduct = p; }

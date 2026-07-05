@@ -261,7 +261,7 @@ func DeleteCustomOrder(id string) error {
 }
 
 func GetPublicOrders() ([]*model.CustomOrder, error) {
-	rows, err := DB.Query("SELECT id, title, budget, policy, consumer_name, status, created_at FROM custom_orders WHERE status='active' ORDER BY created_at DESC")
+	rows, err := DB.Query("SELECT id, title, budget, policy, consumer_name, status, created_at FROM custom_orders ORDER BY created_at DESC")
 	if err != nil { return nil, err }
 	defer rows.Close()
 	var orders []*model.CustomOrder
@@ -391,6 +391,14 @@ func RejectQualification(id string) error {
 
 func ExpireAllQualifications() error {
 	_, err := DB.Exec("UPDATE qualifications SET status='expired' WHERE status='active'")
+	return err
+}
+
+func RevokeQualificationsByAttribute(attrType, attrValue string) error {
+	_, err := DB.Exec(
+		"UPDATE qualifications SET status='revoked' WHERE status='active' AND qual_type=? AND qual_value=?",
+		attrType, attrValue,
+	)
 	return err
 }
 

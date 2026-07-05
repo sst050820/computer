@@ -9,7 +9,7 @@ var VueCart = {
     '<div v-if="list.length>0">' +
     '<div class="cart-list">' +
     '<div v-for="(item, idx) in list" :key="idx" class="cart-item">' +
-    '<div class="cart-item-img">{{ item.image || "📦" }}</div>' +
+    '<div class="cart-item-img"><img v-if="imageSrc(item)" :src="imageSrc(item)" :alt="item.name" /><span v-else>{{ imageEmoji(item) }}</span></div>' +
     '<div class="cart-item-info">' +
     '<div class="cart-item-name">{{ item.name }}</div>' +
     '<div class="cart-item-shop">{{ item.shop_name || "" }}</div>' +
@@ -36,7 +36,7 @@ var VueCart = {
     '<div class="modal-body">' +
     '<div style="margin-bottom:16px;">' +
     '<div v-for="(item, idx) in list" :key="\'p\'+idx" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--co-neutral-100);">' +
-    '<div style="flex:1;"><div style="font-weight:500;font-size:0.9rem;">{{ item.name }}</div><div style="font-size:0.75rem;color:var(--co-neutral-500);">{{ item.shop_name || "" }} × {{ item.qty||1 }}</div></div>' +
+    '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><div class="cart-pay-img"><img v-if="imageSrc(item)" :src="imageSrc(item)" :alt="item.name" /><span v-else>{{ imageEmoji(item) }}</span></div><div style="min-width:0;"><div style="font-weight:500;font-size:0.9rem;">{{ item.name }}</div><div style="font-size:0.75rem;color:var(--co-neutral-500);">{{ item.shop_name || "" }} × {{ item.qty||1 }}</div></div></div>' +
     '<div style="font-weight:600;font-size:0.95rem;color:var(--co-accent-berry);">¥{{ ((item.price||0)*(item.qty||1)).toFixed(1) }}</div>' +
     '</div></div>' +
     '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;margin-bottom:12px;">' +
@@ -90,6 +90,24 @@ var VueCart = {
         arr.push({ id: s.id, name: s.name, price: s.price, image: s.image, qty: s.qty || 1, shop_id: s.shop_id || '', shop_name: s.shop_name || '' });
       }
       this.list = arr;
+      this.attachCartImages();
+    },
+    attachCartImages: function() {
+      var self = this;
+      API._fetch('/api/products').then(function(res) {
+        var productMap = {};
+        ((res && res.data) || []).forEach(function(p) { if (p && p.id) productMap[p.id] = p; });
+        var changed = false;
+        for (var i = 0; i < self.list.length; i++) {
+          var item = self.list[i];
+          var p = productMap[item.id];
+          if (p && p.image && item.image !== p.image) {
+            self.list.splice(i, 1, { id:item.id, name:item.name, price:item.price, image:p.image, qty:item.qty, shop_id:item.shop_id, shop_name:item.shop_name });
+            changed = true;
+          }
+        }
+        if (changed) self.save();
+      });
     },
     save: function() {
       if (window.App && window.App.cart) {
@@ -115,6 +133,12 @@ var VueCart = {
       if (newQty < 1) newQty = 1;
       this.list.splice(idx, 1, { id:old.id, name:old.name, price:old.price, image:old.image, qty:newQty, shop_id:old.shop_id, shop_name:old.shop_name });
       this.save();
+    },
+    imageSrc: function(item) {
+      return item && item.image && item.image.length > 6 ? item.image : '';
+    },
+    imageEmoji: function(item) {
+      return item && item.image && item.image.length <= 6 ? item.image : '📦';
     },
     del: function(idx) {
       this.list.splice(idx, 1);

@@ -98,8 +98,11 @@ var API = {
   getAllUsers: function() { return this._fetch("/api/admin/users"); },
   getAllQualifications: function() { return this._fetch("/api/admin/qualifications"); },
   getAllCustomOrders: function() { return this._fetch("/api/admin/orders"); },
-  sysUpdate: function() {
-    return this._fetch("/api/admin/sys-update", { method: "POST" });
+  sysUpdate: function(data) {
+    return this._fetch("/api/admin/sys-update", {
+      method: "POST",
+      body: JSON.stringify(data || {})
+    });
   },
 
   // 监管方
@@ -111,13 +114,11 @@ var API = {
       { method: "POST", body: JSON.stringify({ product_id: productId }) });
   },
 
-  // ABE 解密
-  decryptABE: function(sessionId, ciphertext, merchantId) {
-    return this._fetch("/api/abe/decrypt", {
+  // 定制需求解密
+  decryptCustomOrder: function(orderId, merchantId) {
+    return this._fetch("/api/custom-orders/" + orderId + "/decrypt", {
       method: "POST",
-      body: JSON.stringify({
-        session_id: sessionId, ciphertext: ciphertext, merchant_id: merchantId
-      })
+      body: JSON.stringify({ merchant_id: merchantId })
     });
   },
 };

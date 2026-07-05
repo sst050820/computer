@@ -21,7 +21,7 @@ const VueMerchantOrders = {
     /* Body */
     '<div style="padding:14px 16px;">' +
     '<div style="display:flex;gap:14px;align-items:center;">' +
-    '<div style="width:52px;height:52px;border-radius:var(--rd-md);background:var(--co-neutral-100);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;">📦</div>' +
+    '<div class="cart-pay-img" style="width:52px;height:52px;font-size:1.4rem;"><img v-if="imageSrc(o)" :src="imageSrc(o)" :alt="o.product_name" /><span v-else>{{ imageEmoji(o) }}</span></div>' +
     '<div style="flex:1;min-width:0;">' +
     '<h4 style="font-size:0.95rem;font-weight:600;margin-bottom:4px;">{{ o.product_name }}</h4>' +
     '<div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:0.8rem;color:var(--co-neutral-500);">' +
@@ -87,7 +87,7 @@ const VueMerchantOrders = {
     '<div class="modal-header"><h3 class="modal-title">订单详情 #{{ detail.id }}</h3><button class="modal-close" @click="detail=null"><i class="fas fa-times"></i></button></div>' +
     '<div class="modal-body">' +
     '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">' +
-    '<div style="width:52px;height:52px;border-radius:var(--rd-md);background:var(--co-neutral-100);display:flex;align-items:center;justify-content:center;font-size:1.6rem;">📦</div>' +
+    '<div class="cart-pay-img" style="width:56px;height:56px;font-size:1.6rem;"><img v-if="imageSrc(detail)" :src="imageSrc(detail)" :alt="detail.product_name" /><span v-else>{{ imageEmoji(detail) }}</span></div>' +
     '<div><h4 style="font-size:1rem;">{{ detail.product_name }}</h4><p style="font-size:0.8rem;color:var(--co-neutral-500);">买家: {{ detail.consumer_name }} · ¥{{ (detail.total||0).toFixed(1) }}</p></div></div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:0.84rem;">' +
     '<div><span style="color:var(--co-neutral-500);">状态</span><div style="font-weight:600;"><base-badge :color="statusColor(detail.status)">{{ statusLabel(detail.status) }}</base-badge></div></div>' +
@@ -98,16 +98,32 @@ const VueMerchantOrders = {
     '<button @click="detail=null" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:16px;padding:10px 20px;border:1px solid var(--co-neutral-300);border-radius:var(--rd-md);font-size:0.88rem;font-weight:500;cursor:pointer;background:#fff;color:var(--co-neutral-600);transition:all 0.2s;" onmouseover="this.style.background=\'var(--co-neutral-50)\'" onmouseout="this.style.background=\'#fff\'">关闭</button>' +
     '</div></div></div>',
   data: function() { return { orders: [], loading: true, detail: null }; },
-  mounted: function() {
-    var self = this;
-    var user = window.App.currentUser;
-    if (!user) { self.loading = false; return; }
-    API._fetch('/api/merchant/orders?merchant_id=' + user.id).then(function(res) {
-      self.orders = res.data || [];
-      self.loading = false;
-    }).catch(function() { self.loading = false; });
-  },
+  mounted: function() { this.fetch(); },
   methods: {
+    fetch: function() {
+      var self = this;
+      var user = window.App.currentUser;
+      if (!user) { self.loading = false; return; }
+      Promise.all([API._fetch('/api/merchant/orders?merchant_id=' + user.id), API._fetch('/api/products')]).then(function(results) {
+        self.orders = self.attachProductImages((results[0] && results[0].data) || [], (results[1] && results[1].data) || []);
+        self.loading = false;
+      }).catch(function() { self.loading = false; });
+    },
+    attachProductImages: function(orders, products) {
+      var productMap = {};
+      (products || []).forEach(function(p) { if (p && p.id) productMap[p.id] = p; });
+      return (orders || []).map(function(o) {
+        var p = productMap[o.product_id];
+        if (p && p.image) o.product_image = p.image;
+        return o;
+      });
+    },
+    imageSrc: function(order) {
+      return order && order.product_image && order.product_image.length > 6 ? order.product_image : '';
+    },
+    imageEmoji: function(order) {
+      return order && order.product_image && order.product_image.length <= 6 ? order.product_image : '📦';
+    },
     statusColor: function(s) {
       var m = { pending:'amber', confirmed:'blue', shipped:'purple', delivered:'green', completed:'green', cancelled:'red' };
       return m[s] || 'neutral';
@@ -138,11 +154,7 @@ const VueMerchantOrders = {
         if (res.status === 'success') {
           window.showToast('订单已更新: ' + self.statusLabel(status), 'success');
           self.loading = true;
-          var user = window.App.currentUser;
-          API._fetch('/api/merchant/orders?merchant_id=' + (user ? user.id : '')).then(function(r) {
-            self.orders = r.data || [];
-            self.loading = false;
-          });
+          self.fetch();
         }
       });
     }

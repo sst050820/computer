@@ -14,7 +14,7 @@ var VueConsumerOrders = {
     '<div style="display:flex;align-items:center;gap:12px;"><span style="font-size:0.8rem;font-weight:600;color:var(--co-neutral-700);">#{{ o.id }}</span><span style="font-size:0.75rem;color:var(--co-neutral-400);">{{ fmtTime(o.created_at) }}</span></div>' +
     '<base-badge :color="statusColor(o.status)">{{ statusLabel(o.status) }}</base-badge></div>' +
     '<div style="padding:14px 16px;"><div style="display:flex;gap:14px;align-items:center;">' +
-    '<div style="width:48px;height:48px;border-radius:var(--rd-md);background:var(--co-neutral-100);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">📦</div>' +
+    '<div class="cart-pay-img" style="width:52px;height:52px;font-size:1.4rem;"><img v-if="imageSrc(o)" :src="imageSrc(o)" :alt="o.product_name" /><span v-else>{{ imageEmoji(o) }}</span></div>' +
     '<div style="flex:1;min-width:0;"><h4 style="font-size:0.95rem;font-weight:600;margin-bottom:4px;">{{ o.product_name }}</h4>' +
     '<div style="display:flex;flex-wrap:wrap;gap:6px 16px;font-size:0.8rem;color:var(--co-neutral-500);"><span><i class="fas fa-store"></i> {{ o.merchant_name||o.merchant_id }}</span><span>×{{ o.quantity }}</span></div></div>' +
     '<div style="text-align:right;flex-shrink:0;"><div style="font-size:1.2rem;font-weight:700;color:var(--co-accent-berry);">¥{{ (o.total||0).toFixed(1) }}</div></div></div>' +
@@ -26,7 +26,7 @@ var VueConsumerOrders = {
     '<div v-if="detail" class="modal-overlay" @click.self="detail=null"><div class="modal-content" style="max-width:520px;">' +
     '<div class="modal-header"><h3 class="modal-title">订单详情 #{{ detail.id }}</h3><button class="modal-close" @click="detail=null"><i class="fas fa-times"></i></button></div>' +
     '<div class="modal-body">' +
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div style="width:52px;height:52px;border-radius:var(--rd-md);background:var(--co-neutral-100);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">📦</div>' +
+    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;"><div class="cart-pay-img" style="width:56px;height:56px;font-size:1.6rem;"><img v-if="imageSrc(detail)" :src="imageSrc(detail)" :alt="detail.product_name" /><span v-else>{{ imageEmoji(detail) }}</span></div>' +
     '<div><h4 style="font-size:1rem;">{{ detail.product_name }}</h4><p style="font-size:0.8rem;color:var(--co-neutral-500);">{{ detail.merchant_name||detail.merchant_id }} · ¥{{ (detail.total||0).toFixed(1) }}</p></div></div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;font-size:0.84rem;">' +
     '<div><span style="color:var(--co-neutral-500);">状态</span><div style="font-weight:600;"><base-badge :color="statusColor(detail.status)">{{ statusLabel(detail.status) }}</base-badge></div></div>' +
@@ -60,11 +60,26 @@ var VueConsumerOrders = {
       var self = this;
       var user = window.App && window.App.currentUser;
       if (!user) { self.loading = false; return; }
-      API._fetch('/api/consumer/orders?consumer_id=' + user.id).then(function(res) {
-        self.orders = res.data || [];
+      Promise.all([API._fetch('/api/consumer/orders?consumer_id=' + user.id), API._fetch('/api/products')]).then(function(results) {
+        self.orders = self.attachProductImages((results[0] && results[0].data) || [], (results[1] && results[1].data) || []);
         self.loading = false;
+        self.checkStatusChanges();
       }).catch(function() { self.loading = false; });
-      self.checkStatusChanges();
+    },
+    attachProductImages: function(orders, products) {
+      var productMap = {};
+      (products || []).forEach(function(p) { if (p && p.id) productMap[p.id] = p; });
+      return (orders || []).map(function(o) {
+        var p = productMap[o.product_id];
+        if (p && p.image) o.product_image = p.image;
+        return o;
+      });
+    },
+    imageSrc: function(order) {
+      return order && order.product_image && order.product_image.length > 6 ? order.product_image : '';
+    },
+    imageEmoji: function(order) {
+      return order && order.product_image && order.product_image.length <= 6 ? order.product_image : '📦';
     },
     checkStatusChanges: function() {
       var uid = (window.App && window.App.currentUser) ? window.App.currentUser.id : '';
@@ -96,7 +111,7 @@ var VueConsumerOrders = {
     statusLabel: function(s) { var m={pending:'待确认',confirmed:'已接单',shipped:'已发货',delivered:'已送达',completed:'已完成',cancelled:'已取消'}; return m[s]||s; },
     reorder: function(o) {
       if (window.App && window.App.addToCart) {
-        window.App.addToCart({ id: o.product_id, name: o.product_name, price: o.price, shop_id: o.merchant_id, shop_name: o.merchant_name });
+        window.App.addToCart({ id: o.product_id, name: o.product_name, price: o.price, image: o.product_image || '', shop_id: o.merchant_id, shop_name: o.merchant_name });
         window.showToast('已加入购物车', 'success');
       }
     },
